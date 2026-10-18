@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Gaya global AIO PESTGUARD.
+  Tema warna dibatasi hijau dan putih sesuai arahan tim AIGRA,
+  supaya tampilan konsisten dan mudah dibaca oleh petani sebagai pengguna utama.
+*/
+
+:root {
+  --pestguard-radius-kartu: 1rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #f1f9f3;
+  color: #10241a;
+}
+
+/* Scrollbar tipis bertema hijau, supaya tetap terasa menyatu dengan tema */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #e4f3e8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4fae6d;
+  border-radius: 999px;
+  border: 2px solid #e4f3e8;
+}
+
+/* Util kecil untuk garis pemisah lembut yang dipakai berulang di banyak kartu */
+.garis-pemisah-lembut {
+  border-color: #dbe7df;
+}
+
+/* Animasi masuk halus untuk kartu insight, dipakai lewat class pestguard-muncul */
+@keyframes pestguardMuncul {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pestguard-muncul {
+  animation: pestguardMuncul 0.35s ease-out both;
+}
+
+/* Memastikan teks yang disalin pengguna (insight) tetap rapi saat dipilih */
+::selection {
+  background-color: #c9e9d3;
+  color: #0f3d2e;
+}
