@@ -1,6 +1,6 @@
 # AIO PESTGUARD: Penjelasan Sistem Lengkap
 
-Dokumen ini menjelaskan apa itu AIO PESTGUARD, bagaimana alurnya dari foto sampai tindakan petani, bagaimana kode disusun, dan titik mana yang perlu disambungkan oleh tim backend. Status saat ini: **simulasi frontend**. Model deteksi asli belum disambungkan.
+Dokumen ini menjelaskan apa itu AIO PESTGUARD, bagaimana alurnya dari foto sampai tindakan petani, bagaimana kode disusun, dan titik mana yang perlu disambungkan oleh tim backend. Status saat ini: halaman **Cek Hama dari Foto** sudah memakai model ONNX asli yang berjalan di browser. Beranda dan Riwayat masih memakai data contoh.
 
 ## 1. Tujuan
 
@@ -33,6 +33,8 @@ Pada simulasi ini, bagian "BELUM ADA" dihitung di frontend dari data contoh, aga
 | Rute | Isi |
 |---|---|
 | `/` Beranda Lahan | Ringkasan hari ini, wawasan lahan terpilih (tombol Salin dan Unduh), 4 angka kunci, peringkat lahan, tren 7 hari, distribusi keyakinan, langkah tindakan, foto perangkap dengan kotak deteksi, tabel spesies, panel wawasan hama (fase hidup, perkiraan bertelur, pilihan obat) |
+| `/deteksi` Cek Hama dari Foto | Model ONNX asli di browser. Lihat bagian 12 |
+| `/hama` Kamus Hama | 24 kelas hama dengan panduan lapangan, dapat dicari dan disaring per komoditas |
 | `/riwayat` Riwayat Sesi | Tabel semua sesi foto, saring per lahan |
 | `/riwayat/[sessionId]` | Detail satu sesi, memakai komponen analisis yang sama dengan Beranda, plus tombol Salin dan Unduh |
 | `/panduan` Cara Kerja Sistem | Alur 5 langkah, arti istilah, hasil evaluasi 3 model, status pengerjaan, batasan sistem |
@@ -174,3 +176,51 @@ Deploy ke Vercel: push ke GitHub, impor repositori di Vercel, framework terdetek
 4. Pindahkan agregasi harian ke backend bila volume data besar.
 5. Tambahkan unggah foto manual (`POST /detect`) bila dibutuhkan.
 6. Aktifkan CORS di FastAPI untuk domain Vercel.
+
+## 12. Cek Hama dari Foto: inferensi ONNX di browser
+
+### Berkas yang terlibat
+
+```
+app/deteksi/page.tsx            Membaca daftar foto di public/sample-images (server, saat build)
+components/deteksi/LabDeteksi   Alur utama: pilih foto, jalankan, susun wawasan
+lib/model/konfigurasiModel.ts   Daftar 3 model dan SEMUA angka evaluasi notebook
+lib/model/kelasHama.ts          24 kelas (urutan = indeks keluaran model), panduan lapangan per kelompok
+lib/model/inferensiOnnx.ts      Muat runtime, unduh dan cache model, praproses, inferensi
+lib/model/pascaproses.ts        Fungsi murni: letterbox, urai keluaran [1,28,8400], NMS per kelas
+lib/model/analisisCitra.ts      Cek kecerahan, ketajaman, resolusi dibanding data latih
+lib/model/wawasanPrediksi.ts    Wawasan teknis + laporan teks + JSON format POST /detect
+lib/model/wawasanPetani.ts      Lapisan bahasa petani: jawaban, langkah bertingkat, daftar cek
+scripts/salin-runtime-onnx.mjs  postinstall: salin ONNX Runtime Web ke public/ort
+```
+
+### Alur
+
+1. ONNX Runtime Web 1.30 dimuat dari `/ort` (cadangan: CDN jsDelivr).
+2. Model diunduh sekali dengan progres, lalu disimpan di Cache Storage browser. Kunjungan berikutnya langsung jalan.
+3. Praproses meniru Ultralytics: letterbox 640x640 latar abu 114, RGB 0..1, NCHW.
+4. Keluaran `[1, 28, 8400]` diurai: skor kelas tertinggi per jangkar, kandidat minimal 5%, NMS per kelas IoU 0,7, maksimal 300, koordinat dikembalikan ke ukuran asli.
+5. Penggeser kepekaan menyaring ulang tanpa inferensi ulang. Ini setara persis dengan menjalankan ulang model, karena NMS hanya menekan kotak oleh kotak yang skornya lebih tinggi.
+
+Header `Cross-Origin-Opener-Policy` dan `Cross-Origin-Embedder-Policy: credentialless` di `next.config.mjs` mengaktifkan multi-thread WebAssembly. Mode WebGPU tersedia di Pengaturan lanjutan untuk perangkat yang mendukung.
+
+### Wawasan yang ditampilkan dan sumber angkanya
+
+| Wawasan | Sumber |
+|---|---|
+| Peluang benar per deteksi (terkalibrasi) | Diagram kalibrasi notebook (ECE 0,0362) |
+| Tarik ulur presisi, recall, F1 sesuai kepekaan | Sapuan ambang notebook |
+| Rekam jejak per jenis hama | Tabel kesehatan deteksi per kelas dan 5 kelas AP50 terendah |
+| Kelas alternatif dan pasangan sering tertukar | Skor 3 kelas teratas tiap jangkar, matriks kebingungan (ulat tanah besar dan potong hitam) |
+| Kualitas foto | Karakteristik data latih dan uji ketahanan (blur -15%, gelap -8%, resolusi rendah -20,3%) |
+| Ukuran objek di foto | Recall objek sedang 57% dibanding objek besar 77% |
+| Kesepakatan 3 model | Pengelompokan IoU 0,55 kelas sama, seperti WBF notebook (F1 0,740 menjadi 0,756) |
+| Panduan lapangan, musuh alami, pengendalian | Ringkasan PHT umum per kelompok hama, bukan pengganti PPL |
+| Pilihan obat | Referensi_Pestisida_Hama.csv (baru 2 hama) |
+| Siklus hidup | Data_Hama_AIGRA.csv (3 hama) |
+
+### Catatan untuk tim
+
+- Urutan 24 kelas pada model berbeda dengan ID IP102 asli (contoh grub indeks 20, IP102 nomor 14). Pemetaan ada di `kelasHama.ts`.
+- Validasi notebook mencatat selisih kecil ONNX dan PyTorch (keyakinan rata-rata 0,021, jumlah deteksi 0,1 per gambar).
+- Untuk memperbarui angka evaluasi setelah melatih ulang, cukup sunting `konfigurasiModel.ts` dan bagian `uji` di `kelasHama.ts`.

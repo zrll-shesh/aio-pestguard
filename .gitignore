@@ -5,3 +5,9 @@ next-env.d.ts
 *.tsbuildinfo
 .DS_Store
 .vercel
+
+# Runtime ONNX disalin otomatis dari node_modules saat npm install
+/public/ort
+
+# Bobot PyTorch tidak dipakai web (cukup .onnx), dan ukurannya besar
+*.pt

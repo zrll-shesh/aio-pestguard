@@ -40,7 +40,7 @@ export default function TabelRingkasanSpesies({ daftarDeteksi }: { daftarDeteksi
         <div className="overflow-x-auto">
           <table className="w-full min-w-[480px] text-left text-sm">
             <thead>
-              <tr className="text-xs uppercase tracking-wide text-pestguardAbuTeks">
+              <tr className="text-[12px] text-pestguardAbuTeks">
                 <th className="pb-2 font-semibold">Hama</th>
                 <th className="pb-2 font-semibold">Tanaman</th>
                 <th className="pb-2 text-right font-semibold">Jumlah</th>

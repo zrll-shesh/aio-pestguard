@@ -4,12 +4,13 @@
 
 /*
   Gaya global AIO PESTGUARD.
-  Tema warna dibatasi hijau dan putih sesuai arahan tim AIGRA,
-  supaya tampilan konsisten dan mudah dibaca oleh petani sebagai pengguna utama.
+  Tema hijau dan putih. Struktur visual (sidebar gelap, hero, kartu angka, panel)
+  mengikuti pola dasbor CIVIC-FOOD AI agar konsisten antarproyek tim.
 */
 
 :root {
   --pestguard-radius-kartu: 1rem;
+  color-scheme: light;
 }
 
 html {
@@ -17,32 +18,47 @@ html {
 }
 
 body {
-  background-color: #f1f9f3;
-  color: #10241a;
+  background-color: #f3f8f4;
+  color: #102419;
+  font-feature-settings: "tnum" 1;
 }
 
-/* Scrollbar tipis bertema hijau, supaya tetap terasa menyatu dengan tema */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid #1d8a4f;
+  outline-offset: 2px;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #e4f3e8;
+  background: #e3f1e7;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4fae6d;
+  background: #8fbf9c;
   border-radius: 999px;
-  border: 2px solid #e4f3e8;
+  border: 2px solid #e3f1e7;
 }
 
-/* Util kecil untuk garis pemisah lembut yang dipakai berulang di banyak kartu */
 .garis-pemisah-lembut {
-  border-color: #dbe7df;
+  border-color: #d8e6dc;
 }
 
-/* Animasi masuk halus untuk kartu insight, dipakai lewat class pestguard-muncul */
 @keyframes pestguardMuncul {
   from {
     opacity: 0;
@@ -58,8 +74,66 @@ body {
   animation: pestguardMuncul 0.35s ease-out both;
 }
 
-/* Memastikan teks yang disalin pengguna (insight) tetap rapi saat dipilih */
+/* Hero bergaya CIVIC-FOOD: lingkaran tipis sebagai aksen di sudut kanan atas */
+.pestguard-hero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 140% at 100% 0%, #17603d 0%, #0c3a29 55%, #0a2e21 100%);
+}
+
+.pestguard-hero::after {
+  content: "";
+  position: absolute;
+  width: 440px;
+  height: 440px;
+  right: -140px;
+  top: -200px;
+  border-radius: 50%;
+  border: 1px solid rgba(143, 209, 158, 0.18);
+  box-shadow: 0 0 0 60px rgba(143, 209, 158, 0.04);
+  pointer-events: none;
+}
+
+/* Nampan spesimen: latar penampil hasil deteksi, mengingatkan pada papan perangkap hama */
+.pestguard-nampan {
+  background-color: #0a2e21;
+  background-image: linear-gradient(rgba(143, 209, 158, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(143, 209, 158, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Penggeser ambang keyakinan */
+.pestguard-penggeser {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #14703f var(--isi, 35%), #d8e6dc var(--isi, 35%));
+}
+
+.pestguard-penggeser::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #14703f;
+  box-shadow: 0 2px 6px rgba(12, 58, 41, 0.25);
+  cursor: pointer;
+}
+
+.pestguard-penggeser::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #14703f;
+  cursor: pointer;
+}
+
 ::selection {
   background-color: #c9e9d3;
-  color: #0f3d2e;
+  color: #0c3a29;
 }

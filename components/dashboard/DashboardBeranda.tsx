@@ -9,6 +9,7 @@ import GrafikTrenTujuhHari from "./GrafikTrenTujuhHari";
 import DistribusiKeyakinan from "./DistribusiKeyakinan";
 import AreaAnalisisSesi from "./AreaAnalisisSesi";
 import KartuDasar from "@/components/ui/KartuDasar";
+import AjakanCekFoto from "./AjakanCekFoto";
 import { susunKalimatRingkasanSemuaLahan } from "@/lib/insightEngine";
 
 interface PropsDashboardBeranda {
@@ -25,7 +26,8 @@ export default function DashboardBeranda({ daftarRingkasanLahanTerurut, daftarSe
   const sesiTerbaruLahan = daftarSesiPemantauan.find((sesi) => sesi.idLahan === ringkasanLahanTerpilih.idLahan) ?? null;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5">
+    <div className="mx-auto max-w-[1440px] space-y-5">
+      <AjakanCekFoto />
       <BannerWawasanUtama
         ringkasanLahanTerpilih={ringkasanLahanTerpilih}
         sesiTerbaruLahan={sesiTerbaruLahan}

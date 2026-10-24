@@ -1,20 +1,22 @@
 {
   "name": "aio-pestguard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "AIO PESTGUARD - simulasi antarmuka web sistem deteksi dan monitoring hama tanaman (AIGRA)",
+  "description": "AIO PESTGUARD - antarmuka web deteksi dan monitoring hama tanaman (AIGRA), dengan inferensi model ONNX langsung di browser",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "node scripts/salin-runtime-onnx.mjs"
   },
   "dependencies": {
-    "next": "14.2.5",
+    "next": "14.2.35",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "lucide-react": "0.400.0",
-    "clsx": "2.1.1"
+    "clsx": "2.1.1",
+    "onnxruntime-web": "1.30.0"
   },
   "devDependencies": {
     "typescript": "5.4.5",
@@ -25,6 +27,6 @@
     "postcss": "8.4.38",
     "autoprefixer": "10.4.19",
     "eslint": "8.57.0",
-    "eslint-config-next": "14.2.5"
+    "eslint-config-next": "14.2.35"
   }
 }

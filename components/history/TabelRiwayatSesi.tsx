@@ -48,7 +48,7 @@ export default function TabelRiwayatSesi({ daftarSesiPemantauan, daftarRingkasan
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
-            <tr className="text-xs uppercase tracking-wide text-pestguardAbuTeks">
+            <tr className="text-[12px] text-pestguardAbuTeks">
               <th className="pb-2 font-semibold">Waktu</th>
               <th className="pb-2 font-semibold">Lahan</th>
               <th className="pb-2 font-semibold">Kamera</th>

@@ -20,11 +20,11 @@ export default function BannerWawasanUtama({
   const namaFileUnduhan = `wawasan-${ringkasanLahanTerpilih.idLahan}-2026-10-19.txt`;
 
   return (
-    <section className="pestguard-muncul overflow-hidden rounded-pestguardKartu bg-gradient-to-br from-pestguardHijauTua to-pestguardHijauUtama p-6 text-white shadow-pestguardKartuAngkat sm:p-8">
-      <p className="text-xs font-semibold uppercase tracking-widest text-pestguardHijauMuda">Ringkasan hari ini</p>
-      <p className="mt-2 max-w-3xl font-pestguardDisplay text-2xl leading-snug sm:text-3xl">{kalimatRingkasanSemuaLahan}</p>
+    <section className="pestguard-hero rounded-[22px] p-6 text-white shadow-pestguardKartuAngkat sm:p-8">
+      <p className="relative z-[1] text-[13px] font-semibold text-pestguardHijauMuda">Ringkasan hari ini (data contoh)</p>
+      <p className="relative z-[1] mt-2 max-w-3xl font-pestguardDisplay text-2xl font-semibold leading-snug sm:text-[30px]">{kalimatRingkasanSemuaLahan}</p>
 
-      <div className="mt-6 rounded-xl bg-white/10 p-5 backdrop-blur">
+      <div className="relative z-[1] mt-6 rounded-2xl border border-white/10 bg-white/[0.06] p-5">
         <div className="flex flex-wrap items-center gap-3">
           <Lightbulb className="h-5 w-5 text-pestguardHijauMuda" aria-hidden />
           <h2 className="text-base font-semibold">
@@ -34,7 +34,7 @@ export default function BannerWawasanUtama({
         </div>
         <p className="mt-3 text-sm leading-relaxed text-white/90">{ringkasanLahanTerpilih.narasiWawasanUtama}</p>
         <div className="mt-3 rounded-lg bg-white p-4 text-sm leading-relaxed text-pestguardTeksUtama">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-pestguardHijauUtama">Saran tindakan</p>
+          <p className="mb-1 text-[13px] font-semibold text-pestguardHijauUtama">Saran tindakan</p>
           {ringkasanLahanTerpilih.rekomendasiUtama}
         </div>
         <div className="mt-4">

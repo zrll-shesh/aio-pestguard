@@ -10,7 +10,7 @@ export default function KartuAngkaRingkas({ ringkasanLahan }: { ringkasanLahan: 
   const keyakinanDipercaya = ringkasanLahan.rataRataKeyakinanHariIni >= BATAS_RATA_RATA_KEYAKINAN_DIPERCAYA;
 
   const kelasKartu = "rounded-pestguardKartu border border-pestguardAbuGaris bg-white p-5 shadow-pestguardKartu";
-  const kelasJudul = "flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-pestguardAbuTeks";
+  const kelasJudul = "flex items-center gap-2 text-[12px] font-semibold text-pestguardAbuTeks";
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
