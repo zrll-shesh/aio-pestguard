@@ -1,10 +1,11 @@
 "use client";
 
-import { CalendarClock, CheckCircle2, Clock3, MapPin, ShieldAlert, ShieldCheck, Sprout, TriangleAlert, Users, XCircle, Zap } from "lucide-react";
+import { CalendarClock, CheckCircle2, Clock3, MapPin, Sprout, TriangleAlert, Users, XCircle, Zap } from "lucide-react";
 import type { JawabanPetani, WarnaStatus } from "@/lib/model/wawasanPetani";
 import type { RingkasanKelasTerdeteksi } from "@/lib/model/wawasanPrediksi";
 import { ambilPanduanKelompok, WARNA_KOMODITAS } from "@/lib/model/kelasHama";
 import { gabungkanNamaKelas } from "@/lib/utils";
+import BlokPengendalian from "@/components/pengendalian/BlokPengendalian";
 
 // ---------------------------------------------------------------------------
 // Langkah bertingkat: sekarang, beberapa hari ke depan, mencegah ke depan
@@ -91,12 +92,6 @@ export function PanelCekPetani({ jawaban }: { jawaban: JawabanPetani }) {
 // ---------------------------------------------------------------------------
 // Kenali hamanya: profil, tempat periksa, musuh alami, siklus hidup, pilihan obat
 // ---------------------------------------------------------------------------
-const TIPS_AMAN_PESTISIDA = [
-  "Baca label dan ikuti dosisnya. Dosis lebih tinggi tidak membuat lebih ampuh, justru mempercepat hama kebal.",
-  "Pakai masker, sarung tangan, baju lengan panjang, dan sepatu bot saat mencampur dan menyemprot.",
-  "Semprot pagi atau sore, jangan saat angin kencang atau akan hujan.",
-  "Perhatikan masa tunggu panen yang tertulis di label.",
-];
 
 function SiklusHidup({ ringkasan }: { ringkasan: RingkasanKelasTerdeteksi }) {
   const referensi = ringkasan.referensiSiklusHidup;
@@ -136,7 +131,7 @@ export function PanelKenaliHama({ daftarRingkasan }: { daftarRingkasan: Ringkasa
   return (
     <section className="rounded-pestguardKartu border border-pestguardAbuGaris bg-white p-5 shadow-pestguardKartu sm:p-[22px]">
       <h2 className="font-pestguardDisplay text-[19px] font-semibold text-pestguardHijauTua">Kenali hamanya</h2>
-      <p className="mt-1 text-[14px] text-pestguardAbuTeks">Ciri, tempat mencari, teman petani yang memangsa hama ini, dan pilihan obat bila terpaksa.</p>
+      <p className="mt-1 text-[14px] text-pestguardAbuTeks">Ciri, tempat mencari, teman petani yang memangsa hama ini, cara alami dan organik, serta obat kimia bila terpaksa.</p>
       <div className="mt-4 space-y-4">
         {daftarRingkasan.map((ringkasan) => {
           const { kelas } = ringkasan;
@@ -178,37 +173,9 @@ export function PanelKenaliHama({ daftarRingkasan }: { daftarRingkasan: Ringkasa
 
               <SiklusHidup ringkasan={ringkasan} />
 
-              <div className="mt-4">
-                <h4 className="flex items-center gap-2 text-[14px] font-semibold text-pestguardHijauTua">
-                  {ringkasan.pestisida.length ? <ShieldCheck className="h-4 w-4" aria-hidden /> : <ShieldAlert className="h-4 w-4" aria-hidden />}
-                  Pilihan obat dari referensi AIGRA
-                </h4>
-                {ringkasan.pestisida.length === 0 ? (
-                  <p className="mt-1 text-[13.5px] leading-relaxed text-pestguardAbuTeks">
-                    Belum ada di referensi sistem. Utamakan cara tanpa obat di atas, dan tanyakan pilihan obat yang terdaftar ke penyuluh pertanian (PPL).
-                  </p>
-                ) : (
-                  <>
-                    <p className="mt-1 text-[13px] text-pestguardAbuTeks">Hanya bila hama terbukti banyak di lahan. Ganti-ganti bahan aktif antar penyemprotan.</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                      {ringkasan.pestisida.map((p) => (
-                        <div key={p.bahan_aktif + p.contoh_produk} className="rounded-xl border border-pestguardAbuGaris p-3">
-                          <p className="text-[14px] font-semibold text-pestguardTeksUtama">{p.bahan_aktif}</p>
-                          <p className="mt-0.5 text-[12.5px] text-pestguardAbuTeks">Kadar {p.dosis}</p>
-                          <p className="text-[12.5px] text-pestguardAbuTeks">Contoh merek: {p.contoh_produk}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <ul className="mt-3 space-y-1.5 rounded-xl bg-amber-50 p-3">
-                      {TIPS_AMAN_PESTISIDA.map((tip) => (
-                        <li key={tip} className="flex gap-2 text-[13px] leading-relaxed text-amber-900">
-                          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                          {tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
+              <div className="mt-5">
+                <h4 className="mb-3 font-pestguardDisplay text-[16px] font-semibold text-pestguardHijauTua">Cara mengendalikan</h4>
+                <BlokPengendalian classId={kelas.classId} namaKomoditas={kelas.komoditas} />
               </div>
             </article>
           );

@@ -94,12 +94,29 @@ export function susunJawabanPetani(wawasan: WawasanPrediksi, analisisCitra: Hasi
     if (yakin.warna !== "hijau") sekarang.push("Jangan langsung menyemprot. Pastikan dulu hamanya memang ada di tanaman, karena hasil foto belum pasti.");
     beberapaHari.push(`Tanda harus bertindak: ${panduan.tandaHarusBertindak}`);
     beberapaHari.push(kelas.pengendalian[0]);
-    if (wawasan.hamaUtama?.pestisida.length) {
+    const pengendalian = wawasan.hamaUtama?.pengendalian;
+    if (pengendalian && pengendalian.alami.length > 0) {
       beberapaHari.push(
-        `Bila harus memakai obat, pilih salah satu bahan aktif ini: ${wawasan.hamaUtama.pestisida.map((p) => p.bahan_aktif).join(", ")}. Ganti-ganti bahan aktif tiap penyemprotan supaya hama tidak kebal.`
+        `Coba dulu cara alami: ${pengendalian.alami
+          .slice(0, 2)
+          .map((a) => a.nama.toLowerCase())
+          .join(", atau ")}. Lebih aman untuk musuh alami dan tidak meninggalkan residu.`
+      );
+    }
+    if (pengendalian && pengendalian.kimiaBoleh.length > 0) {
+      beberapaHari.push(
+        `Bila hama tetap banyak, baru pakai obat kimia. Pilih salah satu bahan aktif: ${pengendalian.kimiaBoleh
+          .slice(0, 3)
+          .map((p) => p.bahanAktif)
+          .join(", ")}. Ganti-ganti bahan aktif tiap penyemprotan supaya hama tidak kebal.`
       );
     } else {
-      beberapaHari.push("Referensi obat untuk hama ini belum ada di sistem. Tanyakan pilihan obat ke penyuluh pertanian (PPL) setempat.");
+      beberapaHari.push("Belum ada obat kimia yang boleh dipakai untuk hama ini di referensi sistem. Tanyakan ke penyuluh pertanian (PPL) setempat.");
+    }
+    if (pengendalian && pengendalian.kimiaTerlarang.length > 0) {
+      beberapaHari.push(
+        `Hati-hati, jangan pakai ${pengendalian.kimiaTerlarang.map((p) => p.bahanAktif).join(", ")} di ${kelas.komoditas.toLowerCase()}. Bahan ini masuk daftar larangan, walau tercantum di sumber pengendalian.`
+      );
     }
     pencegahan.push(...kelas.pengendalian.slice(1));
     pencegahan.push(`Jaga musuh alaminya: ${panduan.musuhAlami}`);
@@ -165,6 +182,8 @@ export function susunJawabanPetani(wawasan: WawasanPrediksi, analisisCitra: Hasi
   // ---------- Teks untuk dibagikan (WhatsApp) ----------
   const barisBagikan = ["*AIO PESTGUARD - hasil cek foto hama*", kalimatUtama, `Keyakinan: ${yakin.kata}${peluang !== null ? ` (sekitar ${persenBulat(peluang)} benar saat diuji)` : ""}.`];
   if (sekarang.length) barisBagikan.push("", "*Yang perlu dilakukan sekarang:*", ...sekarang.slice(0, 2).map((s, i) => `${i + 1}. ${s}`));
+  const alamiUtama = wawasan.hamaUtama?.pengendalian.alami[0];
+  if (alamiUtama) barisBagikan.push("", `*Cara alami yang bisa dicoba:* ${alamiUtama.nama} (${alamiUtama.sumber}).`);
   barisBagikan.push("", "_Hasil ini bantuan awal, bukan pengganti pengecekan langsung dan saran PPL._");
 
   return {

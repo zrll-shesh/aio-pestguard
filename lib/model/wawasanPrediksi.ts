@@ -9,7 +9,8 @@
  */
 
 import type { HasilDeteksiHama, JenisKomoditas, ResponsDeteksi, TingkatKeyakinanDeteksi } from "@/lib/types";
-import { ambilRekomendasiPestisida, normalisasiNamaHama, tentukanTingkatKeyakinan } from "@/lib/insightEngine";
+import { normalisasiNamaHama, tentukanTingkatKeyakinan } from "@/lib/insightEngine";
+import { keRekomendasiApi, ringkasPengendalian } from "./referensiPestisida";
 import { REFERENSI_STADIUM_PER_HAMA, type ReferensiBiologisHama } from "@/lib/mockData";
 import {
   DAFTAR_KELAS_HAMA,
@@ -69,7 +70,7 @@ export interface RingkasanKelasTerdeteksi {
   skorTertinggi: number;
   statusKeandalan: StatusKeandalanKelas;
   penjelasanKeandalan: string;
-  pestisida: ReturnType<typeof ambilRekomendasiPestisida>;
+  pengendalian: ReturnType<typeof ringkasPengendalian>;
   referensiSiklusHidup: ReferensiBiologisHama | null;
 }
 
@@ -162,7 +163,7 @@ function ringkasPerKelas(daftarDeteksi: DeteksiTerolah[]): RingkasanKelasTerdete
         skorTertinggi: Math.max(...daftar.map((d) => d.skor)),
         statusKeandalan: tentukanStatusKeandalan(kelas),
         penjelasanKeandalan: jelaskanKeandalanKelas(kelas),
-        pestisida: ambilRekomendasiPestisida(kelas.namaIp102),
+        pengendalian: ringkasPengendalian(kelas.classId),
         referensiSiklusHidup: REFERENSI_STADIUM_PER_HAMA[kunciReferensi] ?? null,
       };
     })
@@ -280,12 +281,19 @@ export function susunWawasanPrediksi(params: {
       langkahTindakan.push("Ada deteksi yang skornya bersaing dengan kelas lain. Lihat kolom kelas alternatif sebelum memilih tindakan.");
     }
     langkahTindakan.push(...hamaUtama.kelas.pengendalian.slice(0, 2));
-    if (hamaUtama.pestisida.length > 0) {
+    const { kimiaBoleh, kimiaTerlarang, alami } = hamaUtama.pengendalian;
+    if (alami.length > 0) {
+      langkahTindakan.push(`Cara alami yang bisa dicoba lebih dulu: ${alami.map((a) => a.nama.toLowerCase()).join("; ")}.`);
+    }
+    if (kimiaBoleh.length > 0) {
       langkahTindakan.push(
-        `Bila populasi di lahan melewati batas aman, pilihan bahan aktif dari referensi AIGRA: ${hamaUtama.pestisida.map((p) => p.bahan_aktif).join(", ")}. Gilir bahan aktif dan ikuti dosis label.`
+        `Bila populasi di lahan melewati batas aman, pilihan bahan aktif: ${kimiaBoleh.slice(0, 4).map((p) => p.bahanAktif).join(", ")}. Gilir bahan aktif dan ikuti dosis label.`
       );
     } else {
-      langkahTindakan.push("Referensi pestisida AIGRA belum memuat hama ini. Konsultasikan pilihan obat dengan penyuluh pertanian lapangan (PPL).");
+      langkahTindakan.push("Belum ada pilihan obat kimia yang boleh dipakai di referensi. Konsultasikan dengan penyuluh pertanian lapangan (PPL).");
+    }
+    if (kimiaTerlarang.length > 0) {
+      langkahTindakan.push(`Jangan pakai di ${hamaUtama.kelas.komoditas.toLowerCase()}: ${kimiaTerlarang.map((p) => p.bahanAktif).join(", ")}.`);
     }
   } else {
     langkahTindakan.push("Bila di lapangan memang terlihat hama, ambil foto lebih dekat dengan cahaya cukup lalu uji ulang.");
@@ -330,7 +338,7 @@ export function susunResponsDeteksi(params: {
   daftarDeteksi: DeteksiTerolah[];
 }): ResponsDeteksi {
   const deteksi: HasilDeteksiHama[] = params.daftarDeteksi.map((d) => {
-    const pestisida = ambilRekomendasiPestisida(d.kelas.namaIp102);
+    const pestisida = keRekomendasiApi(d.kelas.classId);
     return {
       class_id: d.kelas.classId,
       class_name_ip102: d.kelas.namaIp102,

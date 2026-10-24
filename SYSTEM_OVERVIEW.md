@@ -191,6 +191,7 @@ lib/model/pascaproses.ts        Fungsi murni: letterbox, urai keluaran [1,28,840
 lib/model/analisisCitra.ts      Cek kecerahan, ketajaman, resolusi dibanding data latih
 lib/model/wawasanPrediksi.ts    Wawasan teknis + laporan teks + JSON format POST /detect
 lib/model/wawasanPetani.ts      Lapisan bahasa petani: jawaban, langkah bertingkat, daftar cek
+lib/model/referensiPestisida.ts Pengendalian alami dan kimia per kelas, 12 bahan terlarang untuk padi
 scripts/salin-runtime-onnx.mjs  postinstall: salin ONNX Runtime Web ke public/ort
 ```
 
@@ -216,7 +217,7 @@ Header `Cross-Origin-Opener-Policy` dan `Cross-Origin-Embedder-Policy: credentia
 | Ukuran objek di foto | Recall objek sedang 57% dibanding objek besar 77% |
 | Kesepakatan 3 model | Pengelompokan IoU 0,55 kelas sama, seperti WBF notebook (F1 0,740 menjadi 0,756) |
 | Panduan lapangan, musuh alami, pengendalian | Ringkasan PHT umum per kelompok hama, bukan pengganti PPL |
-| Pilihan obat | Referensi_Pestisida_Hama.csv (baru 2 hama) |
+| Cara alami/organik, obat kimia, larangan padi, catatan kekebalan | `lib/model/referensiPestisida.ts`, disalin dari dokumen Referensi Pestisida Hama Tanaman (Proposal_Deteksi_Hama_AIGRA_revisi.pdf), 24 kelas + ulat bawang |
 | Siklus hidup | Data_Hama_AIGRA.csv (3 hama) |
 
 ### Catatan untuk tim
@@ -224,3 +225,11 @@ Header `Cross-Origin-Opener-Policy` dan `Cross-Origin-Embedder-Policy: credentia
 - Urutan 24 kelas pada model berbeda dengan ID IP102 asli (contoh grub indeks 20, IP102 nomor 14). Pemetaan ada di `kelasHama.ts`.
 - Validasi notebook mencatat selisih kecil ONNX dan PyTorch (keyakinan rata-rata 0,021, jumlah deteksi 0,1 per gambar).
 - Untuk memperbarui angka evaluasi setelah melatih ulang, cukup sunting `konfigurasiModel.ts` dan bagian `uji` di `kelasHama.ts`.
+
+### Referensi pengendalian (alami dan kimia)
+
+- Setiap kelas menampilkan cara alami dan organik lebih dulu (nabati, hayati, mekanis), lalu obat kimia bila terpaksa.
+- Bahan kimia diperiksa otomatis terhadap 12 bahan aktif terlarang untuk padi (Sinar Tani, Prof. Dadang IPB). Bahan terlarang tidak pernah muncul sebagai saran, dan ditampilkan di kotak merah "Jangan dipakai di padi".
+- Cara alami yang baru diuji pada hama kerabat diberi label "diuji pada hama kerabat".
+- Untuk wereng coklat kecil, 19 bahan bersumber pesticideresistance.org (basis data kekebalan) ditampilkan sebagai "pernah tercatat kebal", bukan rekomendasi.
+- Ulat bawang (Spodoptera exigua) ditampilkan di Kamus Hama sebagai referensi tambahan karena belum termasuk 24 kelas model.

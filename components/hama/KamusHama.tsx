@@ -9,7 +9,9 @@ import {
   ambilPanduanKelompok,
   tentukanStatusKeandalan,
 } from "@/lib/model/kelasHama";
-import { ambilRekomendasiPestisida } from "@/lib/insightEngine";
+import { ambilReferensiPengendalian } from "@/lib/model/referensiPestisida";
+import BlokPengendalian from "@/components/pengendalian/BlokPengendalian";
+import { InfoLarangan, ReferensiUlatBawang } from "./InfoPestisida";
 import { gabungkanNamaKelas } from "@/lib/utils";
 
 const PILIHAN_KOMODITAS = ["Semua", "Padi", "Jagung", "Bawang"] as const;
@@ -30,12 +32,16 @@ export default function KamusHama() {
     return DAFTAR_KELAS_HAMA.filter(
       (k) =>
         (komoditas === "Semua" || k.komoditas === komoditas) &&
-        (!kunci || [k.namaIndonesia, k.namaIlmiah, k.namaIp102, k.kelompok, k.gejala].some((t) => t.toLowerCase().includes(kunci)))
+        (!kunci ||
+          [k.namaIndonesia, k.namaIlmiah, k.namaIp102, k.kelompok, k.gejala, ...ambilReferensiPengendalian(k.classId).alami.map((a) => a.nama), ...ambilReferensiPengendalian(k.classId).kimia.map((b) => b.bahanAktif)].some((t) =>
+            t.toLowerCase().includes(kunci)
+          ))
     );
   }, [kataCari, komoditas]);
 
   return (
     <div className="space-y-4">
+      <InfoLarangan />
       <div className="flex flex-col gap-3 rounded-pestguardKartu border border-pestguardAbuGaris bg-white p-4 shadow-pestguardKartu sm:flex-row sm:items-center">
         <label className="flex min-h-[46px] flex-1 items-center gap-2 rounded-xl border border-pestguardAbuGaris px-3 focus-within:border-pestguardHijauSedang">
           <Search className="h-4 w-4 text-pestguardAbuTeks" aria-hidden />
@@ -43,7 +49,7 @@ export default function KamusHama() {
           <input
             value={kataCari}
             onChange={(e) => setKataCari(e.target.value)}
-            placeholder="Cari nama hama atau gejala, misalnya: daun menggulung"
+            placeholder="Cari hama, gejala, atau bahan, misalnya: mimba"
             className="w-full bg-transparent text-[15px] outline-none placeholder:text-pestguardAbuTeks/70"
           />
         </label>
@@ -78,7 +84,7 @@ export default function KamusHama() {
         {daftar.map((kelas) => {
           const panduan = ambilPanduanKelompok(kelas);
           const keandalan = LABEL_KEANDALAN[tentukanStatusKeandalan(kelas)];
-          const pestisida = ambilRekomendasiPestisida(kelas.namaIp102);
+          const jumlahAlami = ambilReferensiPengendalian(kelas.classId).alami.length;
           const buka = terbuka === kelas.classId;
           return (
             <article key={kelas.classId} className={gabungkanNamaKelas("rounded-pestguardKartu border bg-white shadow-pestguardKartu", buka ? "border-pestguardHijauSedang md:col-span-2 xl:col-span-3" : "border-pestguardAbuGaris")}>
@@ -95,6 +101,9 @@ export default function KamusHama() {
                       {kelas.komoditas}
                     </span>
                     <span className={gabungkanNamaKelas("rounded-full px-2 py-0.5 text-[11.5px] font-semibold", keandalan.kelas)}>{keandalan.teks}</span>
+                    {jumlahAlami > 0 && (
+                      <span className="rounded-full bg-pestguardHijauUtama/10 px-2 py-0.5 text-[11.5px] font-semibold text-pestguardHijauUtama">{jumlahAlami} cara alami</span>
+                    )}
                   </span>
                   {!buka && <span className="mt-2 line-clamp-2 block text-[13.5px] leading-relaxed text-pestguardAbuTeks">{kelas.gejala}</span>}
                 </span>
@@ -117,35 +126,20 @@ export default function KamusHama() {
                       </div>
                     ))}
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <h3 className="text-[14px] font-semibold text-pestguardHijauTua">Cara mengendalikan tanpa obat</h3>
-                      <ul className="mt-2 list-disc space-y-1.5 pl-5 text-[14px] leading-relaxed text-pestguardTeksUtama">
-                        {kelas.pengendalian.map((p) => (
-                          <li key={p}>{p}</li>
-                        ))}
-                      </ul>
-                      <p className="mt-2 text-[13.5px] text-pestguardAbuTeks">
-                        <span className="font-semibold text-pestguardTeksUtama">Kapan harus bertindak: </span>
-                        {panduan.tandaHarusBertindak}
-                      </p>
-                    </div>
-                    <div>
-                      <h3 className="text-[14px] font-semibold text-pestguardHijauTua">Pilihan obat (referensi AIGRA)</h3>
-                      {pestisida.length ? (
-                        <ul className="mt-2 space-y-1.5 text-[13.5px]">
-                          {pestisida.map((p) => (
-                            <li key={p.bahan_aktif} className="rounded-lg border border-pestguardAbuGaris px-3 py-2">
-                              <span className="font-semibold">{p.bahan_aktif}</span> <span className="text-pestguardAbuTeks">({p.contoh_produk})</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="mt-2 text-[13.5px] leading-relaxed text-pestguardAbuTeks">Belum ada di referensi sistem. Tanyakan ke penyuluh pertanian (PPL).</p>
-                      )}
-                      <p className="mt-3 text-[12.5px] leading-relaxed text-pestguardAbuTeks">Kemampuan sistem mengenali hama ini: {keandalan.teks.toLowerCase()}.</p>
-                    </div>
+                  <div>
+                    <h3 className="text-[14px] font-semibold text-pestguardHijauTua">Cara mengendalikan tanpa obat</h3>
+                    <ul className="mt-2 list-disc space-y-1.5 pl-5 text-[14px] leading-relaxed text-pestguardTeksUtama">
+                      {kelas.pengendalian.map((p) => (
+                        <li key={p}>{p}</li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-[13.5px] text-pestguardAbuTeks">
+                      <span className="font-semibold text-pestguardTeksUtama">Kapan harus bertindak: </span>
+                      {panduan.tandaHarusBertindak}
+                    </p>
                   </div>
+                  <BlokPengendalian classId={kelas.classId} namaKomoditas={kelas.komoditas} />
+                  <p className="text-[12.5px] leading-relaxed text-pestguardAbuTeks">Kemampuan sistem mengenali hama ini: {keandalan.teks.toLowerCase()}.</p>
                   <Link href="/deteksi" className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-pestguardHijauUtama px-4 text-[14px] font-semibold text-white hover:bg-pestguardHijauTua">
                     <ScanSearch className="h-4 w-4" aria-hidden /> Cek foto hama sekarang
                   </Link>
@@ -155,6 +149,7 @@ export default function KamusHama() {
           );
         })}
       </div>
+      <ReferensiUlatBawang />
     </div>
   );
 }
