@@ -98,7 +98,7 @@ export default function BerandaLahan({ daftarRingkasan, daftarSesi }: { daftarRi
             ko: "가장 급한 순서로 정렬했습니다. 자세한 설명은 '상세 보기'를 누르세요.",
           })}
         </p>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+        <div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-4">
           {daftarRingkasan.map((r) => (
             <KartuPrediksiLahan key={r.idLahan} ringkasan={r} sesiTerbaru={sesiTerbaruPerLahan(r.idLahan)} />
           ))}

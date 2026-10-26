@@ -131,7 +131,7 @@ export default function KamusHama() {
               {buka && (
                 <div className="space-y-4 border-t border-pestguardAbuGaris p-4 sm:p-5">
                   <p className="text-[15px] leading-relaxed text-pestguardTeksUtama">{tk(kelas.gejala)}</p>
-                  <div className="grid gap-3 md:grid-cols-3">
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-3">
                     {[
                       { Ikon: MapPin, judul: p({ id: "Di mana mencarinya", en: "Where to look", ko: "찾아볼 곳" }), isi: tk(panduan.tempatPeriksa) },
                       { Ikon: Clock3, judul: p({ id: "Kapan memeriksa", en: "When to check", ko: "확인할 때" }), isi: tk(panduan.waktuPeriksa) },

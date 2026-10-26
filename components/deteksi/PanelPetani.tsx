@@ -195,7 +195,7 @@ export function PanelKenaliHama({ daftarRingkasan }: { daftarRingkasan: Ringkasa
 
               <p className="mt-3 text-[14.5px] leading-relaxed text-pestguardTeksUtama">{tk(kelas.gejala)}</p>
 
-              <dl className="mt-4 grid gap-3 sm:grid-cols-3">
+              <dl className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-3">
                 {[
                   { Ikon: MapPin, judul: p({ id: "Di mana mencarinya", en: "Where to look", ko: "찾아볼 곳" }), isi: tk(panduan.tempatPeriksa) },
                   { Ikon: Clock3, judul: p({ id: "Kapan memeriksa", en: "When to check", ko: "확인할 때" }), isi: tk(panduan.waktuPeriksa) },

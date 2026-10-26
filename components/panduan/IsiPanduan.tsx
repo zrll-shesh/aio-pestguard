@@ -154,7 +154,7 @@ export default function IsiPanduan() {
           ko: "노트북의 시험 이미지 110장(해충 144마리) 실제 결과입니다. 세 모델 모두 '사진으로 해충 확인'에서 써 볼 수 있습니다.",
         })}
       >
-        <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] gap-3">
           {[
             {
               angka: p({ id: "85 dari 100", en: "85 of 100", ko: "100마리 중 85" }),

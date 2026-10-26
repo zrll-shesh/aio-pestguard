@@ -71,15 +71,15 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
   ];
 
   return (
-    <article id={`prediksi-${ringkasan.idLahan}`} className="scroll-mt-24 overflow-hidden rounded-pestguardKartu border border-pestguardAbuGaris bg-white shadow-pestguardKartu">
-      <div className="h-1.5" style={{ background: warna }} aria-hidden />
-      <div className="p-5 sm:p-[22px]">
+    <article id={`prediksi-${ringkasan.idLahan}`} className="flex min-w-0 scroll-mt-24 flex-col overflow-hidden rounded-pestguardKartu border border-pestguardAbuGaris bg-white shadow-pestguardKartu">
+      <div className="h-1.5 shrink-0" style={{ background: warna }} aria-hidden />
+      <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-[22px]">
         <header className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="font-pestguardDisplay text-[18px] font-semibold text-pestguardHijauTua">
+            <h3 className="break-words font-pestguardDisplay text-[18px] font-semibold text-pestguardHijauTua">
               {ringkasan.namaLahan} · {komoditas(ringkasan.komoditas)}
             </h3>
-            <p className="text-[12.5px] text-pestguardAbuTeks">
+            <p className="break-words text-[12.5px] text-pestguardAbuTeks">
               {tk(ringkasan.lokasi)} · {ringkasan.luasHektar} ha
             </p>
           </div>
@@ -87,11 +87,11 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
         </header>
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
+          <div className="min-w-0">
             <p className="text-[12.5px] font-semibold text-pestguardAbuTeks">{p({ id: "Hama utama hari ini", en: "Main pest today", ko: "오늘의 주요 해충" })}</p>
-            <p className="mt-0.5 flex items-baseline gap-2">
+            <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <span className="font-pestguardDisplay text-[32px] font-semibold leading-none text-pestguardHijauTua">{ringkasan.totalDeteksiHariIni}</span>
-              <span className="text-[15px] font-semibold text-pestguardTeksUtama">{namaHama}</span>
+              <span className="min-w-0 break-words text-[15px] font-semibold text-pestguardTeksUtama">{namaHama}</span>
             </p>
             <p className="mt-1 inline-flex items-center gap-1 text-[12.5px] font-semibold" style={{ color: naik > 5 ? WARNA_STATUS.tinggi : naik < -5 ? WARNA_STATUS.rendah : "#56685d" }}>
               <IkonTren className="h-4 w-4" aria-hidden />
@@ -99,16 +99,16 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
               {naik}% {p({ id: "dibanding minggu lalu", en: "vs last week", ko: "지난주 대비" })}
             </p>
           </div>
-          <div className="text-right">
+          <div className="ml-auto shrink-0 text-right">
             <GrafikMini nilai={ringkasan.trenTujuhHariTerakhir} warna={warna} />
             <p className="text-[11px] text-pestguardAbuTeks">{p({ id: "7 hari terakhir", en: "last 7 days", ko: "최근 7일" })}</p>
           </div>
         </div>
 
         <div className="mt-4">
-          <div className="flex justify-between text-[12px] font-semibold text-pestguardAbuTeks">
+          <div className="flex justify-between gap-2 text-[12px] font-semibold text-pestguardAbuTeks">
             <span>{p({ id: "Dari batas aman mingguan", en: "Of the weekly safe limit", ko: "주간 안전 기준 대비" })}</span>
-            <span style={{ color: warna }}>{ringkasan.persenDariAmbangBatas}%</span>
+            <span className="shrink-0" style={{ color: warna }}>{ringkasan.persenDariAmbangBatas}%</span>
           </div>
           <div className="relative mt-1.5 h-2.5 overflow-hidden rounded-full bg-pestguardHijauLembut">
             <div className="h-full rounded-full" style={{ width: `${(persenAmbang / 150) * 100}%`, background: warna }} />
@@ -139,9 +139,9 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
                 <li key={titik.judul} className="relative flex gap-3 pb-3 last:pb-0">
                   {i < linimasa.length - 1 && <span className="absolute left-[7px] top-4 h-full w-0.5 bg-pestguardAbuGaris" aria-hidden />}
                   <span className={gabungkanNamaKelas("relative mt-1 h-4 w-4 shrink-0 rounded-full border-2 border-white shadow", WARNA_TITIK[titik.jenis])} aria-hidden />
-                  <div className="min-w-0">
-                    <p className={gabungkanNamaKelas("text-[14px] font-semibold", titik.jenis === "batas" ? "text-pestguardMerahPeringatan" : "text-pestguardTeksUtama")}>{titik.judul}</p>
-                    <p className="text-[12.5px] leading-snug text-pestguardAbuTeks">{titik.keterangan}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className={gabungkanNamaKelas("break-words text-[14px] font-semibold", titik.jenis === "batas" ? "text-pestguardMerahPeringatan" : "text-pestguardTeksUtama")}>{titik.judul}</p>
+                    <p className="break-words text-[12.5px] leading-snug text-pestguardAbuTeks">{titik.keterangan}</p>
                   </div>
                 </li>
               ))}
@@ -149,23 +149,25 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
           )}
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+        {/* Selalu satu kolom: tiap langkah tampil sebagai baris lebar (ikon di kiri, isi di kanan),
+            jadi tetap rapi di layar sempit maupun saat kartu berjejer tiga di layar lebar. */}
+        <ul className="mt-4 flex flex-col gap-2">
           {ubin.map(({ Ikon, warna: w, judul, isi }) => (
-            <div key={judul} className="flex items-start gap-2.5 rounded-xl border border-pestguardAbuGaris p-2.5">
+            <li key={judul} className="flex min-w-0 items-center gap-3 rounded-xl border border-pestguardAbuGaris px-3 py-2.5">
               <span className={gabungkanNamaKelas("grid h-9 w-9 shrink-0 place-items-center rounded-xl", w)}>
                 <Ikon className="h-[18px] w-[18px]" aria-hidden />
               </span>
-              <div className="min-w-0">
-                <p className="text-[11.5px] font-semibold text-pestguardAbuTeks">{judul}</p>
-                <p className="text-[13px] font-semibold leading-snug text-pestguardTeksUtama">{isi}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11.5px] font-semibold leading-tight text-pestguardAbuTeks">{judul}</p>
+                <p className="mt-0.5 text-[13px] font-semibold leading-snug text-pestguardTeksUtama [overflow-wrap:anywhere]">{isi}</p>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
 
         {detailTerbuka && (
           <div className="pestguard-muncul mt-4 space-y-3 border-t border-pestguardAbuGaris pt-4">
-            <p className="text-[14px] leading-relaxed text-pestguardTeksUtama">{narasiDetailLahan(bahasa, ringkasan)}</p>
+            <p className="break-words text-[14px] leading-relaxed text-pestguardTeksUtama">{narasiDetailLahan(bahasa, ringkasan)}</p>
             {kelas && (
               <>
                 <p className="text-[13.5px] leading-relaxed text-pestguardAbuTeks">
@@ -182,7 +184,7 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
                   ))}
                 </ul>
                 {pengendalian && pengendalian.kimiaTerlarang.length > 0 && (
-                  <p className="rounded-xl bg-red-50 p-3 text-[13px] text-red-900">
+                  <p className="rounded-xl bg-red-50 p-3 text-[13px] text-red-900 [overflow-wrap:anywhere]">
                     {p({ id: "Jangan pakai: ", en: "Do not use: ", ko: "사용 금지: " })}
                     {pengendalian.kimiaTerlarang.map((b) => b.bahanAktif).join(", ")}
                   </p>
@@ -208,7 +210,7 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
           </div>
         )}
 
-        <div className="mt-4 flex justify-end">
+        <div className="mt-auto flex justify-end pt-4">
           <button
             type="button"
             onClick={() => setDetailTerbuka((v) => !v)}
