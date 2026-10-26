@@ -71,7 +71,7 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
   ];
 
   return (
-    <article id={`prediksi-${ringkasan.idLahan}`} className="flex min-w-0 scroll-mt-24 flex-col overflow-hidden rounded-pestguardKartu border border-pestguardAbuGaris bg-white shadow-pestguardKartu">
+    <article id={`prediksi-${ringkasan.idLahan}`} className="kartu-lahan flex min-w-0 scroll-mt-24 flex-col overflow-hidden rounded-pestguardKartu border border-pestguardAbuGaris bg-white shadow-pestguardKartu">
       <div className="h-1.5 shrink-0" style={{ background: warna }} aria-hidden />
       <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-[22px]">
         <header className="flex flex-wrap items-start justify-between gap-2">
@@ -86,7 +86,12 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
           <LencanaRisiko tingkatRisiko={ringkasan.tingkatRisiko} />
         </header>
 
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+        {/* Isi kartu: di kartu sempit (HP / tablet) tersusun ke bawah; di kartu lebar
+            berjejer menyamping. Diatur lewat container query di globals.css (.kartu-lahan-isi),
+            jadi patokannya lebar kartu itu sendiri, bukan lebar layar. */}
+        <div className="kartu-lahan-isi mt-4">
+        <div className="kartu-lahan-ringkas min-w-0">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[12.5px] font-semibold text-pestguardAbuTeks">{p({ id: "Hama utama hari ini", en: "Main pest today", ko: "오늘의 주요 해충" })}</p>
             <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -123,7 +128,9 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
           </p>
         </div>
 
-        <div className="mt-5 rounded-2xl bg-pestguardHijauPudar p-4">
+        </div>
+
+        <div className="kartu-lahan-linimasa min-w-0 rounded-2xl bg-pestguardHijauPudar p-4">
           <p className="text-[13px] font-semibold text-pestguardHijauTua">{p({ id: "Prediksi & analisis", en: "Prediction & analysis", ko: "예측 및 분석" })}</p>
           {linimasa.length === 0 ? (
             <p className="mt-1 text-[13px] leading-relaxed text-pestguardAbuTeks">
@@ -149,9 +156,8 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
           )}
         </div>
 
-        {/* Selalu satu kolom: tiap langkah tampil sebagai baris lebar (ikon di kiri, isi di kanan),
-            jadi tetap rapi di layar sempit maupun saat kartu berjejer tiga di layar lebar. */}
-        <ul className="mt-4 flex flex-col gap-2">
+        {/* Langkah selalu satu kolom: tiap langkah berupa baris lebar (ikon kiri, isi kanan). */}
+        <ul className="kartu-lahan-aksi flex min-w-0 flex-col gap-2">
           {ubin.map(({ Ikon, warna: w, judul, isi }) => (
             <li key={judul} className="flex min-w-0 items-center gap-3 rounded-xl border border-pestguardAbuGaris px-3 py-2.5">
               <span className={gabungkanNamaKelas("grid h-9 w-9 shrink-0 place-items-center rounded-xl", w)}>
@@ -164,9 +170,11 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
             </li>
           ))}
         </ul>
+        </div>
 
         {detailTerbuka && (
-          <div className="pestguard-muncul mt-4 space-y-3 border-t border-pestguardAbuGaris pt-4">
+          <div className="kartu-lahan-detail pestguard-muncul mt-5 border-t border-pestguardAbuGaris pt-4">
+            <div className="min-w-0 space-y-3">
             <p className="break-words text-[14px] leading-relaxed text-pestguardTeksUtama">{narasiDetailLahan(bahasa, ringkasan)}</p>
             {kelas && (
               <>
@@ -178,6 +186,19 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
                   <span className="font-semibold text-pestguardTeksUtama">{p({ id: "Kapan harus bertindak: ", en: "When to act: ", ko: "조치할 때: " })}</span>
                   {panduan ? tk(panduan.tandaHarusBertindak) : ""}
                 </p>
+              </>
+            )}
+            {deteksiAcuan?.estimasiStadium && (
+              <p className="text-[12px] leading-relaxed text-pestguardAbuTeks">
+                {p({ id: "Dasar perkiraan: ", en: "Basis of estimate: ", ko: "추정 근거: " })}
+                {tk(deteksiAcuan.estimasiStadium.catatanReferensiBiologis.split(". Sumber: ")[0])}.
+              </p>
+            )}
+            </div>
+            <div className="min-w-0 space-y-3">
+            {kelas && (
+              <>
+                <p className="text-[13.5px] font-semibold text-pestguardTeksUtama">{p({ id: "Cara mengendalikan", en: "How to control it", ko: "방제 방법" })}</p>
                 <ul className="list-disc space-y-1 pl-5 text-[13.5px] leading-relaxed text-pestguardTeksUtama">
                   {kelas.pengendalian.map((x) => (
                     <li key={x}>{tk(x)}</li>
@@ -191,12 +212,6 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
                 )}
               </>
             )}
-            {deteksiAcuan?.estimasiStadium && (
-              <p className="text-[12px] leading-relaxed text-pestguardAbuTeks">
-                {p({ id: "Dasar perkiraan: ", en: "Basis of estimate: ", ko: "추정 근거: " })}
-                {tk(deteksiAcuan.estimasiStadium.catatanReferensiBiologis.split(". Sumber: ")[0])}.
-              </p>
-            )}
             <div className="flex flex-wrap gap-2">
               {sesiTerbaru && (
                 <Link href={`/riwayat/${sesiTerbaru.idSesi}`} className="inline-flex min-h-[40px] items-center rounded-xl border border-pestguardAbuGaris px-3 text-[13px] font-semibold text-pestguardHijauTua hover:bg-pestguardHijauPudar">
@@ -207,10 +222,11 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
                 {p({ id: "Cara alami dan obat lengkap", en: "Full natural and chemical options", ko: "친환경·약제 전체 보기" })}
               </Link>
             </div>
+            </div>
           </div>
         )}
 
-        <div className="mt-auto flex justify-end pt-4">
+        <div className="mt-auto flex justify-end pt-3">
           <button
             type="button"
             onClick={() => setDetailTerbuka((v) => !v)}
