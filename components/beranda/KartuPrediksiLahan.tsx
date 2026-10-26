@@ -20,18 +20,28 @@ const WARNA_TITIK: Record<TitikLinimasa["jenis"], string> = {
 };
 
 function GrafikMini({ nilai, warna }: { nilai: number[]; warna: string }) {
-  const lebar = 140;
-  const tinggi = 40;
+  // Grafik ikut melebar sesuai kolomnya. Garis memakai non-scaling-stroke agar tebalnya tetap,
+  // dan titik akhir dibuat sebagai elemen HTML supaya tetap bulat walau grafik ditarik melebar.
+  const lebar = 300;
+  const tinggi = 48;
   const maks = Math.max(...nilai, 1);
-  const titik = nilai.map((v, i) => [(i / (nilai.length - 1)) * (lebar - 6) + 3, tinggi - 4 - (v / maks) * (tinggi - 10)]);
+  const min = Math.min(...nilai, 0);
+  const rentang = Math.max(maks - min, 1);
+  const titik = nilai.map((v, i) => [(i / Math.max(nilai.length - 1, 1)) * lebar, tinggi - 5 - ((v - min) / rentang) * (tinggi - 12)]);
   const garis = titik.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
-  const area = `${garis} L${titik[titik.length - 1][0].toFixed(1)},${tinggi} L${titik[0][0].toFixed(1)},${tinggi} Z`;
+  const area = `${garis} L${lebar},${tinggi} L0,${tinggi} Z`;
+  const [xAkhir, yAkhir] = titik[titik.length - 1];
   return (
-    <svg viewBox={`0 0 ${lebar} ${tinggi}`} className="h-10 w-[140px]" aria-hidden>
-      <path d={area} fill={warna} opacity={0.12} />
-      <path d={garis} fill="none" stroke={warna} strokeWidth={2} strokeLinejoin="round" />
-      <circle cx={titik[titik.length - 1][0]} cy={titik[titik.length - 1][1]} r={3} fill={warna} />
-    </svg>
+    <div className="relative h-12 w-full" aria-hidden>
+      <svg viewBox={`0 0 ${lebar} ${tinggi}`} preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
+        <path d={area} fill={warna} opacity={0.12} />
+        <path d={garis} fill="none" stroke={warna} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <span
+        className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white"
+        style={{ left: `${(xAkhir / lebar) * 100}%`, top: `${(yAkhir / tinggi) * 100}%`, background: warna }}
+      />
+    </div>
   );
 }
 
@@ -70,6 +80,19 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
     },
   ];
 
+  const tombolDetail = (
+    <button
+      type="button"
+      onClick={() => setDetailTerbuka((v) => !v)}
+      aria-expanded={detailTerbuka}
+      aria-controls={`detail-${ringkasan.idLahan}`}
+      className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-pestguardAbuGaris px-3 text-[13px] font-semibold text-pestguardHijauUtama hover:bg-pestguardHijauPudar focus-visible:outline focus-visible:outline-2 focus-visible:outline-pestguardHijauUtama"
+    >
+      {detailTerbuka ? p({ id: "Tutup detail", en: "Hide details", ko: "상세 닫기" }) : p({ id: "Lihat detail", en: "See details", ko: "상세 보기" })}
+      {detailTerbuka ? <ChevronUp className="h-4 w-4" aria-hidden /> : <ArrowRight className="h-4 w-4" aria-hidden />}
+    </button>
+  );
+
   return (
     <article id={`prediksi-${ringkasan.idLahan}`} className="kartu-lahan flex min-w-0 scroll-mt-24 flex-col overflow-hidden rounded-pestguardKartu border border-pestguardAbuGaris bg-white shadow-pestguardKartu">
       <div className="h-1.5 shrink-0" style={{ background: warna }} aria-hidden />
@@ -83,7 +106,10 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
               {tk(ringkasan.lokasi)} · {ringkasan.luasHektar} ha
             </p>
           </div>
-          <LencanaRisiko tingkatRisiko={ringkasan.tingkatRisiko} />
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <LencanaRisiko tingkatRisiko={ringkasan.tingkatRisiko} />
+            {tombolDetail}
+          </div>
         </header>
 
         {/* Isi kartu: di kartu sempit (HP / tablet) tersusun ke bawah; di kartu lebar
@@ -91,43 +117,43 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
             jadi patokannya lebar kartu itu sendiri, bukan lebar layar. */}
         <div className="kartu-lahan-isi mt-4">
         <div className="kartu-lahan-ringkas min-w-0">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="min-w-0">
+          <div>
             <p className="text-[12.5px] font-semibold text-pestguardAbuTeks">{p({ id: "Hama utama hari ini", en: "Main pest today", ko: "오늘의 주요 해충" })}</p>
-            <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <p className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <span className="font-pestguardDisplay text-[32px] font-semibold leading-none text-pestguardHijauTua">{ringkasan.totalDeteksiHariIni}</span>
               <span className="min-w-0 break-words text-[15px] font-semibold text-pestguardTeksUtama">{namaHama}</span>
             </p>
-            <p className="mt-1 inline-flex items-center gap-1 text-[12.5px] font-semibold" style={{ color: naik > 5 ? WARNA_STATUS.tinggi : naik < -5 ? WARNA_STATUS.rendah : "#56685d" }}>
-              <IkonTren className="h-4 w-4" aria-hidden />
+            <p className="mt-1.5 flex items-center gap-1 text-[12.5px] font-semibold" style={{ color: naik > 5 ? WARNA_STATUS.tinggi : naik < -5 ? WARNA_STATUS.rendah : "#56685d" }}>
+              <IkonTren className="h-4 w-4 shrink-0" aria-hidden />
               {naik > 0 ? "+" : ""}
               {naik}% {p({ id: "dibanding minggu lalu", en: "vs last week", ko: "지난주 대비" })}
             </p>
           </div>
-          <div className="ml-auto shrink-0 text-right">
-            <GrafikMini nilai={ringkasan.trenTujuhHariTerakhir} warna={warna} />
-            <p className="text-[11px] text-pestguardAbuTeks">{p({ id: "7 hari terakhir", en: "last 7 days", ko: "최근 7일" })}</p>
-          </div>
-        </div>
 
-        <div className="mt-4">
-          <div className="flex justify-between gap-2 text-[12px] font-semibold text-pestguardAbuTeks">
-            <span>{p({ id: "Dari batas aman mingguan", en: "Of the weekly safe limit", ko: "주간 안전 기준 대비" })}</span>
-            <span className="shrink-0" style={{ color: warna }}>{ringkasan.persenDariAmbangBatas}%</span>
+          <div>
+            <div>
+              <GrafikMini nilai={ringkasan.trenTujuhHariTerakhir} warna={warna} />
+            </div>
+            <p className="mt-0.5 text-right text-[11px] text-pestguardAbuTeks">{p({ id: "7 hari terakhir", en: "last 7 days", ko: "최근 7일" })}</p>
           </div>
-          <div className="relative mt-1.5 h-2.5 overflow-hidden rounded-full bg-pestguardHijauLembut">
-            <div className="h-full rounded-full" style={{ width: `${(persenAmbang / 150) * 100}%`, background: warna }} />
-            <div className="absolute inset-y-0 w-0.5 bg-pestguardHijauTua/60" style={{ left: `${(100 / 150) * 100}%` }} aria-hidden />
-          </div>
-          <p className="mt-1 text-[11px] text-pestguardAbuTeks">
-            {p({
-              id: `Garis tegak = batas aman (${ringkasan.ambangBatasMingguan} ekor/minggu)`,
-              en: `Vertical line = safe limit (${ringkasan.ambangBatasMingguan}/week)`,
-              ko: `세로선 = 안전 기준 (주 ${ringkasan.ambangBatasMingguan}마리)`,
-            })}
-          </p>
-        </div>
 
+          <div>
+            <div className="flex justify-between gap-2 text-[12px] font-semibold text-pestguardAbuTeks">
+              <span>{p({ id: "Dari batas aman mingguan", en: "Of the weekly safe limit", ko: "주간 안전 기준 대비" })}</span>
+              <span className="shrink-0" style={{ color: warna }}>{ringkasan.persenDariAmbangBatas}%</span>
+            </div>
+            <div className="relative mt-1.5 h-2.5 overflow-hidden rounded-full bg-pestguardHijauLembut">
+              <div className="h-full rounded-full" style={{ width: `${(persenAmbang / 150) * 100}%`, background: warna }} />
+              <div className="absolute inset-y-0 w-0.5 bg-pestguardHijauTua/60" style={{ left: `${(100 / 150) * 100}%` }} aria-hidden />
+            </div>
+            <p className="mt-1 text-[11px] text-pestguardAbuTeks">
+              {p({
+                id: `Garis tegak = batas aman (${ringkasan.ambangBatasMingguan} ekor/minggu)`,
+                en: `Vertical line = safe limit (${ringkasan.ambangBatasMingguan}/week)`,
+                ko: `세로선 = 안전 기준 (주 ${ringkasan.ambangBatasMingguan}마리)`,
+              })}
+            </p>
+          </div>
         </div>
 
         <div className="kartu-lahan-linimasa min-w-0 rounded-2xl bg-pestguardHijauPudar p-4">
@@ -173,7 +199,7 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
         </div>
 
         {detailTerbuka && (
-          <div className="kartu-lahan-detail pestguard-muncul mt-5 border-t border-pestguardAbuGaris pt-4">
+          <div id={`detail-${ringkasan.idLahan}`} className="kartu-lahan-detail pestguard-muncul mt-5 border-t border-pestguardAbuGaris pt-4">
             <div className="min-w-0 space-y-3">
             <p className="break-words text-[14px] leading-relaxed text-pestguardTeksUtama">{narasiDetailLahan(bahasa, ringkasan)}</p>
             {kelas && (
@@ -223,20 +249,10 @@ export default function KartuPrediksiLahan({ ringkasan, sesiTerbaru }: { ringkas
               </Link>
             </div>
             </div>
+            <div className="kartu-lahan-detail-tutup flex justify-end">{tombolDetail}</div>
           </div>
         )}
 
-        <div className="mt-auto flex justify-end pt-3">
-          <button
-            type="button"
-            onClick={() => setDetailTerbuka((v) => !v)}
-            aria-expanded={detailTerbuka}
-            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-3 text-[13.5px] font-semibold text-pestguardHijauUtama hover:bg-pestguardHijauPudar"
-          >
-            {detailTerbuka ? p({ id: "Tutup detail", en: "Hide details", ko: "상세 닫기" }) : p({ id: "Lihat detail", en: "See details", ko: "상세 보기" })}
-            {detailTerbuka ? <ChevronUp className="h-4 w-4" aria-hidden /> : <ArrowRight className="h-4 w-4" aria-hidden />}
-          </button>
-        </div>
       </div>
     </article>
   );
