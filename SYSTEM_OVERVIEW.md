@@ -233,3 +233,11 @@ Header `Cross-Origin-Opener-Policy` dan `Cross-Origin-Embedder-Policy: credentia
 - Cara alami yang baru diuji pada hama kerabat diberi label "diuji pada hama kerabat".
 - Untuk wereng coklat kecil, 19 bahan bersumber pesticideresistance.org (basis data kekebalan) ditampilkan sebagai "pernah tercatat kebal", bukan rekomendasi.
 - Ulat bawang (Spodoptera exigua) ditampilkan di Kamus Hama sebagai referensi tambahan karena belum termasuk 24 kelas model.
+
+## 13. Tiga bahasa dan peta sebaran
+
+- `components/i18n/PenyediaBahasa.tsx`: konteks bahasa (id, en, ko), disimpan di localStorage, render pertama selalu Indonesia agar cocok dengan HTML server.
+- `lib/i18n/kontenTerjemahan.ts`: terjemahan isi data, kunci = teks Indonesia.
+- Mesin wawasan (`wawasanPrediksi.ts`, `wawasanPetani.ts`, `analisisCitra.ts`, `lib/i18n/wawasanLahan.ts`) menerima parameter `bahasa` dan menyusun kalimat langsung dalam bahasa itu.
+- `components/beranda/PetaSebaran.tsx`: MapLibre GL + OpenFreeMap, warna peta dasar diredam ke hijau-putih. Saat diperkecil, satu titik per lahan; saat diperbesar (zoom 13 ke atas), satu titik per perangkap. Warna mengikuti status, titik merah berdenyut. Bila peta dasar gagal dimuat dalam 9 detik, latar polos dipakai dan titik tetap tampil.
+- `components/beranda/KartuPrediksiLahan.tsx` dan `components/dashboard/PanelWawasanHama.tsx`: ringkasan visual (linimasa stadium: sekarang, jadi dewasa, bertelur, batas bertindak; tiga ubin tindakan). Narasi lengkap dibuka lewat tombol "Lihat detail".

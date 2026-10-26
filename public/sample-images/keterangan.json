@@ -1,10 +1,13 @@
 {
   "IP014000480.jpg": {
     "judul": "Uret di atas tanah",
-    "sumber": "Data uji IP102"
+    "judul_en": "White grubs on soil",
+    "judul_ko": "흙 위의 굼벵이"
   },
   "kutu-daun-contoh.jpg": {
     "judul": "Kutu daun pada daun",
+    "judul_en": "Aphids on a leaf",
+    "judul_ko": "잎 위의 진딧물",
     "labelAsli": "aphids",
     "sumber": "UC Statewide IPM Project"
   }

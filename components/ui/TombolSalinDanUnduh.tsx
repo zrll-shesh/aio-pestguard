@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Copy, Download } from "lucide-react";
 import { salinTeksKeClipboard, unduhTeksSebagaiFile } from "@/lib/utils";
+import { useBahasa } from "@/components/i18n/PenyediaBahasa";
 import { gabungkanNamaKelas } from "@/lib/utils";
 
 interface PropsTombolSalinDanUnduh {
@@ -20,6 +21,7 @@ export default function TombolSalinDanUnduh({
   namaFileUnduhan,
   tampilanTerang = false,
 }: PropsTombolSalinDanUnduh) {
+  const { p } = useBahasa();
   const [statusSalin, setStatusSalin] = useState<"diam" | "berhasil" | "gagal">("diam");
 
   const tanganiKlikSalin = async () => {
@@ -35,7 +37,7 @@ export default function TombolSalinDanUnduh({
     : "border-pestguardAbuGaris bg-white text-pestguardHijauTua hover:bg-pestguardHijauLembut";
 
   return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label="Bagikan wawasan">
+    <div className="flex flex-wrap gap-2" role="group" aria-label={p({ id: "Bagikan wawasan", en: "Share insight", ko: "인사이트 공유" })}>
       <button
         type="button"
         onClick={tanganiKlikSalin}
@@ -45,7 +47,7 @@ export default function TombolSalinDanUnduh({
         )}
       >
         {statusSalin === "berhasil" ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
-        {statusSalin === "berhasil" ? "Tersalin" : statusSalin === "gagal" ? "Gagal menyalin" : "Salin wawasan"}
+        {statusSalin === "berhasil" ? p({ id: "Tersalin", en: "Copied", ko: "복사됨" }) : statusSalin === "gagal" ? p({ id: "Gagal menyalin", en: "Copy failed", ko: "복사 실패" }) : p({ id: "Salin wawasan", en: "Copy insight", ko: "인사이트 복사" })}
       </button>
       <button
         type="button"
@@ -56,7 +58,7 @@ export default function TombolSalinDanUnduh({
         )}
       >
         <Download className="h-4 w-4" aria-hidden />
-        Unduh wawasan
+        {p({ id: "Unduh wawasan", en: "Download insight", ko: "인사이트 내려받기" })}
       </button>
     </div>
   );

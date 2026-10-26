@@ -1,98 +1,140 @@
-import { CalendarClock, FlaskConical, Info, Ruler } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { ArrowRight, ChevronUp, FlaskConical, Leaf, MapPin, Ruler } from "lucide-react";
 import type { HasilDeteksiHama, RingkasanLahan } from "@/lib/types";
 import KartuDasar from "@/components/ui/KartuDasar";
 import { LencanaKeyakinan } from "@/components/ui/LencanaStatus";
-import { formatAngkaSebagaiPersen, formatTanggalSaja } from "@/lib/utils";
+import BlokPengendalian from "@/components/pengendalian/BlokPengendalian";
+import { ambilPanduanKelompok } from "@/lib/model/kelasHama";
+import { ringkasPengendalian } from "@/lib/model/referensiPestisida";
+import { normalisasiNamaHama } from "@/lib/insightEngine";
+import { kelasDariKunciHama, namaHamaDariDeteksi, susunLinimasa, type TitikLinimasa } from "@/lib/i18n/wawasanLahan";
+import { formatAngkaSebagaiPersen, gabungkanNamaKelas } from "@/lib/utils";
+import { useBahasa } from "@/components/i18n/PenyediaBahasa";
 
-interface PropsPanelWawasanHama {
-  deteksiTerpilih: HasilDeteksiHama | null;
-  ringkasanLahan: RingkasanLahan;
-}
+const WARNA_TITIK: Record<TitikLinimasa["jenis"], string> = {
+  sekarang: "bg-pestguardHijauSedang",
+  dewasa: "bg-amber-400",
+  bertelur: "bg-amber-500",
+  batas: "bg-pestguardMerahPeringatan",
+};
 
-/** Panel wawasan AI untuk satu hama yang dipilih: fase hidup, perkiraan bertelur, dan pilihan obat */
-export default function PanelWawasanHama({ deteksiTerpilih, ringkasanLahan }: PropsPanelWawasanHama) {
+/**
+ * Wawasan untuk hama yang dipilih pada foto sesi, dibuat visual: linimasa prediksi
+ * (sekarang, jadi dewasa, bertelur, batas bertindak) dan tiga ubin tindakan.
+ * Penjelasan lengkap dan pilihan obat dibuka lewat tombol "Lihat detail".
+ */
+export default function PanelWawasanHama({ deteksiTerpilih, ringkasanLahan }: { deteksiTerpilih: HasilDeteksiHama | null; ringkasanLahan: RingkasanLahan }) {
+  const { bahasa, p, tk, angka } = useBahasa();
+  const [detailTerbuka, setDetailTerbuka] = useState(false);
+  const judul = p({ id: "Prediksi & analisis hama terpilih", en: "Prediction & analysis for the selected pest", ko: "선택한 해충 예측 및 분석" });
+
   if (!deteksiTerpilih) {
     return (
-      <KartuDasar judulKartu="Wawasan untuk hama terpilih">
-        <p className="text-sm text-pestguardAbuTeks">Klik salah satu kotak pada foto untuk melihat fase hidup hama, perkiraan waktu bertelur, dan pilihan obat.</p>
+      <KartuDasar judulKartu={judul}>
+        <p className="text-sm text-pestguardAbuTeks">
+          {p({
+            id: "Ketuk salah satu kotak pada foto untuk melihat fase hidup hama, perkiraan waktu bertelur, dan cara mengendalikannya.",
+            en: "Tap a box on the photo to see the pest's life stage, expected egg-laying time, and how to control it.",
+            ko: "사진의 상자를 누르면 해충의 발육 단계, 예상 산란 시기, 방제 방법이 표시됩니다.",
+          })}
+        </p>
       </KartuDasar>
     );
   }
 
-  const stadium = deteksiTerpilih.estimasiStadium;
-  const adaPestisida = deteksiTerpilih.ada_rekomendasi_pestisida;
+  const kelas = kelasDariKunciHama(normalisasiNamaHama(deteksiTerpilih.class_name_ip102));
+  const panduan = kelas ? ambilPanduanKelompok(kelas) : null;
+  const pengendalian = kelas ? ringkasPengendalian(kelas.classId) : null;
+  const linimasa = susunLinimasa(bahasa, deteksiTerpilih);
+
+  const ubin = [
+    { Ikon: MapPin, warna: "bg-pestguardHijauUtama text-white", judul: p({ id: "Periksa", en: "Check", ko: "확인" }), isi: panduan ? tk(panduan.tempatPeriksa).split(/(?<=\.)\s/)[0] : "-" },
+    {
+      Ikon: Leaf,
+      warna: "bg-pestguardHijauLembut text-pestguardHijauUtama",
+      judul: p({ id: "Coba alami", en: "Try natural", ko: "친환경 먼저" }),
+      isi: pengendalian?.alami[0] ? tk(pengendalian.alami[0].nama) : kelas ? tk(kelas.pengendalian[0]).split(/(?<=\.)\s/)[0] : "-",
+    },
+    {
+      Ikon: FlaskConical,
+      warna: "bg-pestguardHijauPudar text-pestguardHijauSedang",
+      judul: p({ id: "Bila terpaksa", en: "If needed", ko: "필요할 때" }),
+      isi: pengendalian?.kimiaBoleh[0]?.bahanAktif ?? p({ id: "Tanyakan ke PPL", en: "Ask an extension officer", ko: "지도사에게 문의" }),
+    },
+  ];
 
   return (
-    <KartuDasar judulKartu="Wawasan untuk hama terpilih" keteranganKartu={`${deteksiTerpilih.nama_indonesia}, ${ringkasanLahan.namaLahan}`}>
+    <KartuDasar judulKartu={judul} keteranganKartu={`${namaHamaDariDeteksi(bahasa, deteksiTerpilih)}, ${ringkasanLahan.namaLahan}`}>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-pestguardMono font-semibold">{formatAngkaSebagaiPersen(deteksiTerpilih.confidence)}</span>
+        <span className="font-pestguardDisplay text-[18px] font-semibold text-pestguardHijauTua">{formatAngkaSebagaiPersen(deteksiTerpilih.confidence)}</span>
         <LencanaKeyakinan tingkatKeyakinan={deteksiTerpilih.tingkatKeyakinan} />
-        {deteksiTerpilih.tingkatKeyakinan === "rendah" && (
-          <span className="text-pestguardMerahPeringatan">Mohon cek langsung di lahan.</span>
+        {deteksiTerpilih.estimasiUkuranCm !== null && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-pestguardHijauPudar px-2.5 py-0.5 text-[12px] font-semibold text-pestguardTeksUtama">
+            <Ruler className="h-3.5 w-3.5" aria-hidden /> {angka(deteksiTerpilih.estimasiUkuranCm, 2)} cm
+          </span>
         )}
       </div>
 
-      <div className="mt-4 space-y-4">
-        <section>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-pestguardHijauTua">
-            <Ruler className="h-4 w-4" aria-hidden /> Ukuran dan fase hidup
-          </h3>
-          {stadium && deteksiTerpilih.estimasiUkuranCm !== null ? (
-            <div className="mt-1.5 text-sm leading-relaxed text-pestguardTeksUtama">
-              <p>
-                Ukuran perkiraan <span className="font-pestguardMono font-semibold">{(deteksiTerpilih.estimasiUkuranCm * 10).toFixed(1)} mm</span>, sehingga hama ini kemungkinan berada pada fase{" "}
-                <strong>{stadium.namaStadium}</strong>.
-              </p>
-              {stadium.stadiumBerikutnya && stadium.perkiraanHariMenujuStadiumBerikutnya !== null && (
-                <p className="mt-1">
-                  Fase berikutnya: {stadium.stadiumBerikutnya}, paling lama sekitar {stadium.perkiraanHariMenujuStadiumBerikutnya} hari lagi.
-                </p>
-              )}
-              <p className="mt-1 text-xs text-pestguardAbuTeks">{stadium.catatanReferensiBiologis}</p>
-            </div>
-          ) : (
-            <p className="mt-1.5 text-sm text-pestguardAbuTeks">Ukuran hama belum bisa dihitung. Kalibrasi ukuran piksel ke sentimeter masih dalam rencana kerja.</p>
-          )}
-        </section>
-
-        <section>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-pestguardHijauTua">
-            <CalendarClock className="h-4 w-4" aria-hidden /> Perkiraan waktu bertelur
-          </h3>
-          {stadium && stadium.perkiraanTanggalMulaiOviposisi && stadium.masaPraOviposisi ? (
-            <p className="mt-1.5 text-sm leading-relaxed text-pestguardTeksUtama">
-              Hama dewasa diperkirakan mulai siap bertelur sekitar <strong>{formatTanggalSaja(stadium.perkiraanTanggalMulaiOviposisi)}</strong>. Pengendalian sebelum tanggal ini
-              mencegah jumlah hama melonjak.
-            </p>
-          ) : (
-            <p className="mt-1.5 text-sm text-pestguardAbuTeks">Data masa bertelur untuk hama ini belum tersedia pada referensi.</p>
-          )}
-        </section>
-
-        <section>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-pestguardHijauTua">
-            <FlaskConical className="h-4 w-4" aria-hidden /> Pilihan obat dari referensi
-          </h3>
-          {adaPestisida ? (
-            <ul className="mt-2 space-y-2">
-              {deteksiTerpilih.rekomendasi_pestisida.map((opsi) => (
-                <li key={`${opsi.bahan_aktif}-${opsi.contoh_produk}`} className="rounded-lg border border-pestguardAbuGaris bg-pestguardHijauPudar p-3 text-sm">
-                  <p className="font-semibold text-pestguardTeksUtama">{opsi.bahan_aktif}</p>
-                  <p className="text-pestguardAbuTeks">
-                    Dosis {opsi.dosis}. Contoh produk: {opsi.contoh_produk}.
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-1.5 text-sm text-pestguardAbuTeks">
-              Belum ada data obat untuk hama ini di referensi AIGRA. Mohon tanyakan ke penyuluh pertanian lapangan.
-            </p>
-          )}
-          <p className="mt-2 flex items-start gap-1.5 text-xs text-pestguardAbuTeks">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden /> Selalu baca label kemasan, pakai alat pelindung, dan gunakan bahan aktif bergantian.
+      <div className="mt-4 rounded-2xl bg-pestguardHijauPudar p-4">
+        {linimasa.length === 0 ? (
+          <p className="text-[13px] leading-relaxed text-pestguardAbuTeks">
+            {p({ id: "Belum ada data ukuran untuk memperkirakan umur hama ini.", en: "No size data yet to estimate this pest's age.", ko: "이 해충의 나이를 추정할 크기 자료가 없습니다." })}
           </p>
-        </section>
+        ) : (
+          <ol>
+            {linimasa.map((titik, i) => (
+              <li key={titik.judul} className="relative flex gap-3 pb-3 last:pb-0">
+                {i < linimasa.length - 1 && <span className="absolute left-[7px] top-4 h-full w-0.5 bg-pestguardAbuGaris" aria-hidden />}
+                <span className={gabungkanNamaKelas("relative mt-1 h-4 w-4 shrink-0 rounded-full border-2 border-white shadow", WARNA_TITIK[titik.jenis])} aria-hidden />
+                <div className="min-w-0">
+                  <p className={gabungkanNamaKelas("text-[14px] font-semibold", titik.jenis === "batas" ? "text-pestguardMerahPeringatan" : "text-pestguardTeksUtama")}>{titik.judul}</p>
+                  <p className="text-[12.5px] leading-snug text-pestguardAbuTeks">{titik.keterangan}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+
+      <div className="mt-3 grid gap-2">
+        {ubin.map(({ Ikon, warna, judul: j, isi }) => (
+          <div key={j} className="flex items-start gap-2.5 rounded-xl border border-pestguardAbuGaris p-2.5">
+            <span className={gabungkanNamaKelas("grid h-9 w-9 shrink-0 place-items-center rounded-xl", warna)}>
+              <Ikon className="h-[18px] w-[18px]" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11.5px] font-semibold text-pestguardAbuTeks">{j}</p>
+              <p className="text-[13px] font-semibold leading-snug text-pestguardTeksUtama">{isi}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {detailTerbuka && kelas && (
+        <div className="pestguard-muncul mt-4 space-y-3 border-t border-pestguardAbuGaris pt-4">
+          <p className="text-[13.5px] leading-relaxed text-pestguardTeksUtama">{tk(kelas.gejala)}</p>
+          {deteksiTerpilih.estimasiStadium && (
+            <p className="text-[12.5px] leading-relaxed text-pestguardAbuTeks">
+              {p({ id: "Dasar perkiraan: ", en: "Basis of estimate: ", ko: "추정 근거: " })}
+              {tk(deteksiTerpilih.estimasiStadium.catatanReferensiBiologis.split(". Sumber: ")[0])}.
+            </p>
+          )}
+          <BlokPengendalian classId={kelas.classId} namaKomoditas={kelas.komoditas} />
+        </div>
+      )}
+
+      <div className="mt-3 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setDetailTerbuka((v) => !v)}
+          aria-expanded={detailTerbuka}
+          className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-3 text-[13.5px] font-semibold text-pestguardHijauUtama hover:bg-pestguardHijauPudar"
+        >
+          {detailTerbuka ? p({ id: "Tutup detail", en: "Hide details", ko: "상세 닫기" }) : p({ id: "Lihat detail", en: "See details", ko: "상세 보기" })}
+          {detailTerbuka ? <ChevronUp className="h-4 w-4" aria-hidden /> : <ArrowRight className="h-4 w-4" aria-hidden />}
+        </button>
       </div>
     </KartuDasar>
   );

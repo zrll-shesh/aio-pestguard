@@ -5,6 +5,7 @@ import { Download, Eye, EyeOff, ImageIcon, Loader2 } from "lucide-react";
 import type { DeteksiTerolah } from "@/lib/model/wawasanPrediksi";
 import { AMBANG_F1_TERTINGGI, AMBANG_KANDIDAT_MINIMUM, AMBANG_KEYAKINAN_DEFAULT } from "@/lib/model/konfigurasiModel";
 import { gabungkanNamaKelas } from "@/lib/utils";
+import { useBahasa } from "@/components/i18n/PenyediaBahasa";
 
 export const WARNA_KOTAK = { tinggi: "#4ade80", sedang: "#facc15", rendah: "#fb7185" } as const;
 
@@ -42,6 +43,7 @@ export default function PenampilDeteksi({
   sedangBerjalan,
   namaBerkasUnduhan,
 }: PropsPenampilDeteksi) {
+  const { p, tk } = useBahasa();
   const [tampilkanLabel, setTampilkanLabel] = useState(true);
   const adaHasil = daftarDeteksi !== null && ukuranGambar !== null;
   const sisiTerpanjang = ukuranGambar ? Math.max(ukuranGambar.lebar, ukuranGambar.tinggi) : 640;
@@ -67,7 +69,7 @@ export default function PenampilDeteksi({
       konteks.strokeStyle = warna;
       konteks.lineWidth = tebalGaris;
       konteks.strokeRect(x1, y1, x2 - x1, y2 - y1);
-      const teks = `${deteksi.nomor}. ${namaPendek(deteksi.kelas.namaIndonesia)} ${persen(deteksi.skor)}`;
+      const teks = `${deteksi.nomor}. ${namaPendek(tk(deteksi.kelas.namaIndonesia))} ${persen(deteksi.skor)}`;
       const lebarTeks = konteks.measureText(teks).width + ukuranHuruf * 0.6;
       const tinggiLabel = ukuranHuruf * 1.45;
       const yLabel = y1 - tinggiLabel >= 0 ? y1 - tinggiLabel : y1;
@@ -91,7 +93,7 @@ export default function PenampilDeteksi({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={alamatGambar}
-            alt={`Gambar uji: ${judulGambar}`}
+            alt={`${p({ id: "Gambar uji", en: "Test image", ko: "시험 이미지" })}: ${judulGambar}`}
             className={gabungkanNamaKelas(
               "block h-full w-full rounded-lg object-contain shadow-[0_12px_40px_rgba(0,0,0,0.35)] transition-opacity",
               sedangBerjalan && "opacity-60"
@@ -103,14 +105,14 @@ export default function PenampilDeteksi({
               className="absolute inset-0 h-full w-full"
               preserveAspectRatio="none"
               role="img"
-              aria-label={`${daftarDeteksi.length} kotak deteksi`}
+              aria-label={`${daftarDeteksi.length} ${p({ id: "kotak deteksi", en: "detection boxes", ko: "탐지 상자" })}`}
             >
               {daftarDeteksi.map((deteksi) => {
                 const [x1, y1, x2, y2] = deteksi.kotak;
                 const warna = WARNA_KOTAK[deteksi.tingkatKeyakinan];
                 const terpilih = idDeteksiTerpilih === deteksi.idDeteksi;
                 const redup = idDeteksiTerpilih !== null && !terpilih;
-                const teks = `${deteksi.nomor}. ${namaPendek(deteksi.kelas.namaIndonesia)} ${persen(deteksi.skor)}`;
+                const teks = `${deteksi.nomor}. ${namaPendek(tk(deteksi.kelas.namaIndonesia))} ${persen(deteksi.skor)}`;
                 const tinggiLabel = ukuranHuruf * 1.45;
                 const yLabel = y1 - tinggiLabel >= 0 ? y1 - tinggiLabel : y1;
                 const lebarLabel = teks.length * ukuranHuruf * 0.62 + ukuranHuruf * 0.6;
@@ -157,14 +159,14 @@ export default function PenampilDeteksi({
         {sedangBerjalan && (
           <div className="absolute inset-x-0 top-4 flex justify-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-pestguardHijauTua shadow">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> Model sedang bekerja di browser Anda
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> {p({ id: "Model sedang bekerja di browser Anda", en: "The model is working in your browser", ko: "모델이 브라우저에서 작동 중입니다" })}
             </span>
           </div>
         )}
         {!adaHasil && !sedangBerjalan && (
           <div className="absolute bottom-4 left-4 right-4 flex justify-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur">
-              <ImageIcon className="h-3.5 w-3.5" aria-hidden /> Pratinjau. Kotak deteksi muncul setelah prediksi dijalankan.
+              <ImageIcon className="h-3.5 w-3.5" aria-hidden /> {p({ id: "Pratinjau. Kotak deteksi muncul setelah prediksi dijalankan.", en: "Preview. Detection boxes appear after you run the prediction.", ko: "미리보기입니다. 예측을 실행하면 탐지 상자가 나타납니다." })}
             </span>
           </div>
         )}
@@ -174,7 +176,7 @@ export default function PenampilDeteksi({
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-3">
             <label htmlFor="penggeser-ambang" className="text-[13.5px] font-semibold text-pestguardTeksUtama">
-              Kepekaan: tampilkan temuan dengan keyakinan minimal
+              {p({ id: "Kepekaan: tampilkan temuan dengan keyakinan minimal", en: "Sensitivity: show findings with confidence of at least", ko: "민감도: 이 신뢰도 이상의 발견만 표시" })}
             </label>
             <span className="font-pestguardDisplay text-lg font-semibold text-pestguardHijauUtama">{persen(ambangKeyakinan)}</span>
           </div>
@@ -192,9 +194,9 @@ export default function PenampilDeteksi({
           />
           <div id="keterangan-ambang" className="mt-2 flex flex-wrap gap-1.5">
             {[
-              { nilai: AMBANG_F1_TERTINGGI, label: "Teliti (20%)", arti: "lebih banyak temuan, sebagian bisa keliru" },
-              { nilai: AMBANG_KEYAKINAN_DEFAULT, label: "Seimbang (35%)", arti: "bawaan sistem" },
-              { nilai: 0.6, label: "Ketat (60%)", arti: "hanya yang paling pasti" },
+              { nilai: AMBANG_F1_TERTINGGI, label: p({ id: "Teliti (20%)", en: "Thorough (20%)", ko: "꼼꼼히 (20%)" }), arti: p({ id: "lebih banyak temuan, sebagian bisa keliru", en: "more findings, some may be wrong", ko: "더 많이 찾지만 일부는 틀릴 수 있음" }) },
+              { nilai: AMBANG_KEYAKINAN_DEFAULT, label: p({ id: "Seimbang (35%)", en: "Balanced (35%)", ko: "균형 (35%)" }), arti: p({ id: "bawaan sistem", en: "system default", ko: "기본값" }) },
+              { nilai: 0.6, label: p({ id: "Ketat (60%)", en: "Strict (60%)", ko: "엄격히 (60%)" }), arti: p({ id: "hanya yang paling pasti", en: "only the surest", ko: "가장 확실한 것만" }) },
             ].map((pilihan) => (
               <button
                 key={pilihan.nilai}
@@ -213,7 +215,11 @@ export default function PenampilDeteksi({
             ))}
           </div>
           <p className="mt-1.5 text-[12px] leading-snug text-pestguardAbuTeks">
-            Geser ke kiri untuk melihat temuan yang samar, ke kanan untuk hanya menampilkan yang paling pasti. Hasil berubah langsung.
+            {p({
+              id: "Geser ke kiri untuk melihat temuan yang samar, ke kanan untuk hanya menampilkan yang paling pasti. Hasil berubah langsung.",
+              en: "Slide left to see faint findings, right to show only the surest ones. Results update instantly.",
+              ko: "왼쪽으로 밀면 희미한 발견까지, 오른쪽으로 밀면 가장 확실한 것만 보입니다. 결과가 바로 바뀝니다.",
+            })}
           </p>
         </div>
         <div className="flex shrink-0 gap-2">
@@ -225,7 +231,7 @@ export default function PenampilDeteksi({
             aria-pressed={tampilkanLabel}
           >
             {tampilkanLabel ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
-            {tampilkanLabel ? "Sembunyikan label" : "Tampilkan label"}
+            {tampilkanLabel ? p({ id: "Sembunyikan label", en: "Hide labels", ko: "라벨 숨기기" }) : p({ id: "Tampilkan label", en: "Show labels", ko: "라벨 보기" })}
           </button>
           <button
             type="button"

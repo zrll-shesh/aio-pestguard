@@ -4,6 +4,7 @@ import { CheckCircle2, CircleDashed, HardDriveDownload, XCircle } from "lucide-r
 import { DAFTAR_MODEL, type KonfigurasiModel } from "@/lib/model/konfigurasiModel";
 import type { StatusBerkasModel } from "@/lib/model/inferensiOnnx";
 import { gabungkanNamaKelas } from "@/lib/utils";
+import { useBahasa } from "@/components/i18n/PenyediaBahasa";
 
 interface PropsPemilihModel {
   idModelTerpilih: string;
@@ -15,41 +16,43 @@ interface PropsPemilihModel {
 function teksUkuran(model: KonfigurasiModel, status: StatusBerkasModel | null) {
   if (status?.ukuranByte) return `${(status.ukuranByte / 1_048_576).toFixed(1)} MB`;
   if (model.perkiraanUkuranOnnxMb) return `${model.perkiraanUkuranOnnxMb} MB`;
-  return "ukuran belum diketahui";
+  return "? MB";
 }
 
 function StatusBerkas({ status }: { status: StatusBerkasModel | null }) {
+  const { p } = useBahasa();
   if (!status) {
     return (
       <span className="inline-flex items-center gap-1 text-[11px] text-pestguardAbuTeks">
-        <CircleDashed className="h-3 w-3 animate-spin" aria-hidden /> memeriksa
+        <CircleDashed className="h-3 w-3 animate-spin" aria-hidden /> {p({ id: "memeriksa", en: "checking", ko: "확인 중" })}
       </span>
     );
   }
   if (!status.tersedia) {
     return (
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-pestguardMerahPeringatan">
-        <XCircle className="h-3 w-3" aria-hidden /> berkas belum ada
+        <XCircle className="h-3 w-3" aria-hidden /> {p({ id: "berkas belum ada", en: "file missing", ko: "파일 없음" })}
       </span>
     );
   }
   if (status.sudahDiCache) {
     return (
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-pestguardHijauUtama">
-        <CheckCircle2 className="h-3 w-3" aria-hidden /> tersimpan di browser
+        <CheckCircle2 className="h-3 w-3" aria-hidden /> {p({ id: "tersimpan di browser", en: "saved in browser", ko: "브라우저에 저장됨" })}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-pestguardAbuTeks">
-      <HardDriveDownload className="h-3 w-3" aria-hidden /> diunduh sekali saat dipakai
+      <HardDriveDownload className="h-3 w-3" aria-hidden /> {p({ id: "diunduh sekali saat dipakai", en: "downloads once when used", ko: "처음 사용 시 한 번 내려받음" })}
     </span>
   );
 }
 
 export default function PemilihModel({ idModelTerpilih, saatModelDipilih, statusBerkasPerModel, terkunci }: PropsPemilihModel) {
+  const { p, tk } = useBahasa();
   return (
-    <div role="radiogroup" aria-label="Model deteksi" className="space-y-2">
+    <div role="radiogroup" aria-label={p({ id: "Model deteksi", en: "Detection model", ko: "탐지 모델" })} className="space-y-2">
       {DAFTAR_MODEL.map((model) => {
         const terpilih = model.idModel === idModelTerpilih;
         const status = statusBerkasPerModel[model.idModel] ?? null;
@@ -83,14 +86,14 @@ export default function PemilihModel({ idModelTerpilih, saatModelDipilih, status
                   model.adalahDefault ? "bg-pestguardHijauUtama text-white" : "bg-pestguardHijauPudar text-pestguardAbuTeks"
                 )}
               >
-                {model.peran}
+                {tk(model.peran)}
               </span>
               <span className="ml-auto font-pestguardDisplay text-sm font-semibold text-pestguardHijauUtama">
                 {(model.metrikUji.map50 * 100).toFixed(1)}
                 <span className="ml-0.5 text-[10.5px] font-medium text-pestguardAbuTeks">mAP50</span>
               </span>
             </div>
-            <p className="mt-1.5 pl-6 text-[12px] leading-snug text-pestguardAbuTeks">{model.ringkasan}</p>
+            <p className="mt-1.5 pl-6 text-[12px] leading-snug text-pestguardAbuTeks">{tk(model.ringkasan)}</p>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 pl-6 text-[11px] text-pestguardAbuTeks">
               <span>{teksUkuran(model, status)}</span>
               <span>{model.gflops} GFLOPs</span>

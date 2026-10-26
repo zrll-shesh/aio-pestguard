@@ -10,10 +10,12 @@
  */
 
 import { PROFIL_DATA_LATIH, UJI_KETAHANAN } from "./konfigurasiModel";
+import { formatAngka, pilihTeks, type Bahasa } from "@/lib/i18n/bahasa";
 
 export type TingkatCatatan = "baik" | "perhatian" | "info";
 
 export interface CatatanKualitas {
+  jenis: "cahaya" | "ketajaman" | "resolusi";
   judul: string;
   nilai: string;
   tingkat: TingkatCatatan;
@@ -85,68 +87,90 @@ export function analisisKualitasGambar(gambar: HTMLImageElement): HasilAnalisisC
     kontras,
     ketajaman,
     rataRataWarna: { r: jumlahR / jumlahPiksel, g: jumlahG / jumlahPiksel, b: jumlahB / jumlahPiksel },
-    daftarCatatan: susunCatatanKualitas({ lebar, tinggi, kecerahan, ketajaman }),
+    daftarCatatan: susunCatatanKualitas({ lebar, tinggi, kecerahan, ketajaman }, "id"),
   };
 }
 
-export function susunCatatanKualitas(ukuran: { lebar: number; tinggi: number; kecerahan: number; ketajaman: number }): CatatanKualitas[] {
+export function susunCatatanKualitas(
+  ukuran: { lebar: number; tinggi: number; kecerahan: number; ketajaman: number },
+  bahasa: Bahasa
+): CatatanKualitas[] {
   const daftar: CatatanKualitas[] = [];
   const { rataRataKecerahan, simpanganKecerahan, rataRataLebar, rataRataTinggi } = PROFIL_DATA_LATIH;
+  const t = (id: string, en: string, ko: string) => pilihTeks(bahasa, { id, en, ko });
+  const n = (v: number, d = 0) => formatAngka(bahasa, v, d);
+  const rataCahaya = n(rataRataKecerahan, 1);
 
+  const judulCahaya = t("Pencahayaan", "Lighting", "밝기");
+  const nilaiCahaya = t(`${Math.round(ukuran.kecerahan)} dari 255`, `${Math.round(ukuran.kecerahan)} of 255`, `255 중 ${Math.round(ukuran.kecerahan)}`);
   const skorZ = (ukuran.kecerahan - rataRataKecerahan) / simpanganKecerahan;
   if (skorZ < -1) {
     daftar.push({
-      judul: "Pencahayaan",
-      nilai: `${Math.round(ukuran.kecerahan)} dari 255`,
-      tingkat: "perhatian",
-      penjelasan: `Lebih gelap dari rata-rata data latih (${rataRataKecerahan}). Pada uji ketahanan, gambar gelap menurunkan F1 sekitar ${UJI_KETAHANAN.gelap.penurunanPersen}%.`,
+      jenis: "cahaya", judul: judulCahaya, nilai: nilaiCahaya, tingkat: "perhatian",
+      penjelasan: t(
+        `Lebih gelap dari rata-rata data latih (${rataCahaya}). Pada uji ketahanan, gambar gelap menurunkan F1 sekitar ${UJI_KETAHANAN.gelap.penurunanPersen}%.`,
+        `Darker than the training data average (${rataCahaya}). In robustness tests, dark images lowered F1 by about ${UJI_KETAHANAN.gelap.penurunanPersen}%.`,
+        `학습 데이터 평균(${rataCahaya})보다 어둡습니다. 견고성 시험에서 어두운 이미지는 F1을 약 ${UJI_KETAHANAN.gelap.penurunanPersen}% 낮췄습니다.`
+      ),
     });
   } else if (skorZ > 1.5) {
     daftar.push({
-      judul: "Pencahayaan",
-      nilai: `${Math.round(ukuran.kecerahan)} dari 255`,
-      tingkat: "perhatian",
-      penjelasan: `Jauh lebih terang dari data latih (${rataRataKecerahan}). Bagian tubuh hama bisa kehilangan detail.`,
+      jenis: "cahaya", judul: judulCahaya, nilai: nilaiCahaya, tingkat: "perhatian",
+      penjelasan: t(
+        `Jauh lebih terang dari data latih (${rataCahaya}). Bagian tubuh hama bisa kehilangan detail.`,
+        `Much brighter than the training data (${rataCahaya}). Pest body details may be washed out.`,
+        `학습 데이터(${rataCahaya})보다 훨씬 밝습니다. 해충 몸의 세부가 날아갈 수 있습니다.`
+      ),
     });
   } else {
     daftar.push({
-      judul: "Pencahayaan",
-      nilai: `${Math.round(ukuran.kecerahan)} dari 255`,
-      tingkat: "baik",
-      penjelasan: `Masih dalam rentang data latih (rata-rata ${rataRataKecerahan}, simpangan ${simpanganKecerahan}).`,
+      jenis: "cahaya", judul: judulCahaya, nilai: nilaiCahaya, tingkat: "baik",
+      penjelasan: t(
+        `Masih dalam rentang data latih (rata-rata ${rataCahaya}, simpangan ${n(simpanganKecerahan, 1)}).`,
+        `Within the training data range (mean ${rataCahaya}, SD ${n(simpanganKecerahan, 1)}).`,
+        `학습 데이터 범위 안에 있습니다(평균 ${rataCahaya}, 표준편차 ${n(simpanganKecerahan, 1)}).`
+      ),
     });
   }
 
+  const judulTajam = t("Ketajaman", "Sharpness", "선명도");
+  const nilaiTajam = t(`skor ${Math.round(ukuran.ketajaman)}`, `score ${Math.round(ukuran.ketajaman)}`, `점수 ${Math.round(ukuran.ketajaman)}`);
   if (ukuran.ketajaman < BATAS_KETAJAMAN_BURAM) {
     daftar.push({
-      judul: "Ketajaman",
-      nilai: `skor ${Math.round(ukuran.ketajaman)}`,
-      tingkat: "perhatian",
-      penjelasan: `Gambar cenderung buram. Pada uji ketahanan, blur menurunkan F1 sekitar ${UJI_KETAHANAN.buram.penurunanPersen}%.`,
+      jenis: "ketajaman", judul: judulTajam, nilai: nilaiTajam, tingkat: "perhatian",
+      penjelasan: t(
+        `Gambar cenderung buram. Pada uji ketahanan, blur menurunkan F1 sekitar ${UJI_KETAHANAN.buram.penurunanPersen}%.`,
+        `The image looks blurry. In robustness tests, blur lowered F1 by about ${UJI_KETAHANAN.buram.penurunanPersen}%.`,
+        `이미지가 흐린 편입니다. 견고성 시험에서 흐림은 F1을 약 ${UJI_KETAHANAN.buram.penurunanPersen}% 낮췄습니다.`
+      ),
     });
   } else {
     daftar.push({
-      judul: "Ketajaman",
-      nilai: `skor ${Math.round(ukuran.ketajaman)}`,
-      tingkat: "baik",
-      penjelasan: "Tepi objek cukup tegas untuk dikenali model.",
+      jenis: "ketajaman", judul: judulTajam, nilai: nilaiTajam, tingkat: "baik",
+      penjelasan: t("Tepi objek cukup tegas untuk dikenali model.", "Object edges are sharp enough for the model.", "모델이 인식하기에 윤곽이 충분히 뚜렷합니다."),
     });
   }
 
+  const judulResolusi = t("Resolusi", "Resolution", "해상도");
+  const nilaiResolusi = `${ukuran.lebar} x ${ukuran.tinggi} px`;
   const sisiPendek = Math.min(ukuran.lebar, ukuran.tinggi);
   if (sisiPendek < BATAS_SISI_PENDEK_RENDAH) {
     daftar.push({
-      judul: "Resolusi",
-      nilai: `${ukuran.lebar} x ${ukuran.tinggi} px`,
-      tingkat: "perhatian",
-      penjelasan: `Lebih kecil dari rata-rata data latih (${rataRataLebar} x ${rataRataTinggi}). Kondisi resolusi rendah menurunkan F1 sekitar ${UJI_KETAHANAN.resolusiRendah.penurunanPersen}%, penurunan terbesar di uji ketahanan.`,
+      jenis: "resolusi", judul: judulResolusi, nilai: nilaiResolusi, tingkat: "perhatian",
+      penjelasan: t(
+        `Lebih kecil dari rata-rata data latih (${rataRataLebar} x ${rataRataTinggi}). Resolusi rendah menurunkan F1 sekitar ${n(UJI_KETAHANAN.resolusiRendah.penurunanPersen, 1)}%, penurunan terbesar di uji ketahanan.`,
+        `Smaller than the training data average (${rataRataLebar} x ${rataRataTinggi}). Low resolution lowered F1 by about ${n(UJI_KETAHANAN.resolusiRendah.penurunanPersen, 1)}%, the largest drop in robustness tests.`,
+        `학습 데이터 평균(${rataRataLebar} x ${rataRataTinggi})보다 작습니다. 낮은 해상도는 F1을 약 ${n(UJI_KETAHANAN.resolusiRendah.penurunanPersen, 1)}% 낮춰 견고성 시험에서 가장 큰 하락을 보였습니다.`
+      ),
     });
   } else {
     daftar.push({
-      judul: "Resolusi",
-      nilai: `${ukuran.lebar} x ${ukuran.tinggi} px`,
-      tingkat: "baik",
-      penjelasan: `Sebanding atau lebih besar dari rata-rata data latih (${rataRataLebar} x ${rataRataTinggi}).`,
+      jenis: "resolusi", judul: judulResolusi, nilai: nilaiResolusi, tingkat: "baik",
+      penjelasan: t(
+        `Sebanding atau lebih besar dari rata-rata data latih (${rataRataLebar} x ${rataRataTinggi}).`,
+        `Equal to or larger than the training data average (${rataRataLebar} x ${rataRataTinggi}).`,
+        `학습 데이터 평균(${rataRataLebar} x ${rataRataTinggi})과 같거나 큽니다.`
+      ),
     });
   }
   return daftar;

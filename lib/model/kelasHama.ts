@@ -17,6 +17,7 @@
  */
 
 import type { JenisKomoditas } from "@/lib/types";
+import { pilihTeks, terjemahKonten, type Bahasa } from "@/lib/i18n/bahasa";
 
 export type StatusKeandalanKelas = "teruji_baik" | "perlu_verifikasi" | "belum_teruji";
 
@@ -273,14 +274,37 @@ export function tentukanStatusKeandalan(kelas: KelasHama): StatusKeandalanKelas 
   return "teruji_baik";
 }
 
-export function jelaskanKeandalanKelas(kelas: KelasHama): string {
+export function jelaskanKeandalanKelas(kelas: KelasHama, bahasa: Bahasa = "id"): string {
   const status = tentukanStatusKeandalan(kelas);
   const jumlahContohUji = kelas.uji.tp + kelas.uji.fn;
+  const t = (id: string, en: string, ko: string) => pilihTeks(bahasa, { id, en, ko });
   if (status === "belum_teruji") {
-    return `Kelas ini tidak punya contoh di data uji (110 gambar), jadi ketepatannya belum terukur.${kelas.uji.fp > 0 ? ` Model pernah ${kelas.uji.fp} kali salah menebak kelas ini pada gambar lain.` : ""}`;
+    const tambahan =
+      kelas.uji.fp > 0
+        ? t(
+            ` Model pernah ${kelas.uji.fp} kali salah menebak kelas ini pada gambar lain.`,
+            ` The model wrongly guessed this class ${kelas.uji.fp} time(s) on other images.`,
+            ` 다른 이미지에서 이 종류로 ${kelas.uji.fp}회 잘못 예측한 적이 있습니다.`
+          )
+        : "";
+    return (
+      t(
+        "Kelas ini tidak punya contoh di data uji (110 gambar), jadi ketepatannya belum terukur.",
+        "This class has no examples in the test data (110 images), so its accuracy is not yet measured.",
+        "시험 데이터(110장)에 이 종류의 사례가 없어 정확도를 아직 측정하지 못했습니다."
+      ) + tambahan
+    );
   }
-  const bagianDasar = `Pada data uji, YOLO11l menemukan ${kelas.uji.tp} dari ${jumlahContohUji} contoh kelas ini${kelas.uji.fp > 0 ? ` dan ${kelas.uji.fp} kali salah menebak kelas ini` : " tanpa salah tebak"}.`;
-  return kelas.catatanKhusus ? `${bagianDasar} ${kelas.catatanKhusus}` : bagianDasar;
+  const salah =
+    kelas.uji.fp > 0
+      ? t(` dan ${kelas.uji.fp} kali salah menebak kelas ini`, ` and wrongly guessed it ${kelas.uji.fp} time(s)`, `, 잘못 예측은 ${kelas.uji.fp}회`)
+      : t(" tanpa salah tebak", " with no false guesses", ", 잘못 예측 없음");
+  const bagianDasar = t(
+    `Pada data uji, YOLO11l menemukan ${kelas.uji.tp} dari ${jumlahContohUji} contoh kelas ini${salah}.`,
+    `In the test data, YOLO11l found ${kelas.uji.tp} of ${jumlahContohUji} examples of this class${salah}.`,
+    `시험 데이터에서 YOLO11l은 이 종류 ${jumlahContohUji}개 중 ${kelas.uji.tp}개를 찾았습니다${salah}.`
+  );
+  return kelas.catatanKhusus ? `${bagianDasar} ${terjemahKonten(bahasa, kelas.catatanKhusus)}` : bagianDasar;
 }
 
 /**

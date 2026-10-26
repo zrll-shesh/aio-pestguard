@@ -4,7 +4,9 @@ import { useId } from "react";
 import type { HasilDeteksiHama, JenisKomoditas, SesiPemantauanLahan } from "@/lib/types";
 import { LEBAR_GAMBAR_SIMULASI_PIKSEL, TINGGI_GAMBAR_SIMULASI_PIKSEL } from "@/lib/mockData";
 import KartuDasar from "@/components/ui/KartuDasar";
-import { formatAngkaSebagaiPersen, formatTanggalDanJam, gabungkanNamaKelas } from "@/lib/utils";
+import { formatAngkaSebagaiPersen, gabungkanNamaKelas } from "@/lib/utils";
+import { useBahasa } from "@/components/i18n/PenyediaBahasa";
+import { namaHamaDariDeteksi } from "@/lib/i18n/wawasanLahan";
 
 const WARNA_KOTAK_PER_KEYAKINAN = { tinggi: "#16653f", sedang: "#b8800a", rendah: "#b3281e" } as const;
 
@@ -32,13 +34,19 @@ export default function PanelGambarDeteksi({
   idDeteksiTerpilih,
   saatDeteksiDipilih,
 }: PropsPanelGambarDeteksi) {
+  const { p, tanggal } = useBahasa();
+  const labelKamera = (label: string) =>
+    label
+      .replace("Perangkap", p({ id: "Perangkap", en: "Trap", ko: "트랩" }))
+      .replace("(pagi)", p({ id: "(pagi)", en: "(morning)", ko: "(아침)" }))
+      .replace("(sore)", p({ id: "(sore)", en: "(afternoon)", ko: "(오후)" }));
   const idGradien = useId();
   const warnaLatar = WARNA_LATAR_PER_KOMODITAS[komoditas];
 
   return (
     <KartuDasar
-      judulKartu="Foto perangkap dan hama yang ditemukan"
-      keteranganKartu={`${sesiPemantauan.labelKamera}, ${formatTanggalDanJam(sesiPemantauan.waktuPengambilan)}. Klik kotak untuk melihat detail hama.`}
+      judulKartu={p({ id: "Foto perangkap dan hama yang ditemukan", en: "Trap photo and pests found", ko: "트랩 사진과 발견된 해충" })}
+      keteranganKartu={`${labelKamera(sesiPemantauan.labelKamera)}, ${tanggal(sesiPemantauan.waktuPengambilan, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}. ${p({ id: "Ketuk kotak untuk melihat detail hama.", en: "Tap a box to see pest details.", ko: "상자를 누르면 해충 정보가 보입니다." })}`}
     >
       <div className="overflow-hidden rounded-xl border border-pestguardAbuGaris">
         <div className="relative w-full" style={{ aspectRatio: `${LEBAR_GAMBAR_SIMULASI_PIKSEL} / ${TINGGI_GAMBAR_SIMULASI_PIKSEL}` }}>
@@ -73,15 +81,15 @@ export default function PanelGambarDeteksi({
               saatDipilih={() => saatDeteksiDipilih(deteksi.idDeteksiUnik)}
             />
           ))}
-          <span className="absolute bottom-2 right-3 rounded bg-black/40 px-2 py-0.5 text-[10px] font-medium text-white">Gambar contoh (simulasi)</span>
+          <span className="absolute bottom-2 right-3 rounded bg-black/40 px-2 py-0.5 text-[10px] font-medium text-white">{p({ id: "Gambar contoh (simulasi)", en: "Sample image (simulated)", ko: "예시 이미지(시뮬레이션)" })}</span>
         </div>
       </div>
 
-      <ul className="mt-3 flex flex-wrap gap-4 text-xs text-pestguardAbuTeks" aria-label="Arti warna kotak">
+      <ul className="mt-3 flex flex-wrap gap-4 text-xs text-pestguardAbuTeks" aria-label={p({ id: "Arti warna kotak", en: "Box colour meaning", ko: "상자 색 의미" })}>
         {(["tinggi", "sedang", "rendah"] as const).map((tingkat) => (
           <li key={tingkat} className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded-sm border-2" style={{ borderColor: WARNA_KOTAK_PER_KEYAKINAN[tingkat] }} aria-hidden />
-            {tingkat === "tinggi" ? "Yakin" : tingkat === "sedang" ? "Cukup yakin" : "Kurang yakin"}
+            {tingkat === "tinggi" ? p({ id: "Yakin", en: "Confident", ko: "확실" }) : tingkat === "sedang" ? p({ id: "Cukup yakin", en: "Fairly sure", ko: "보통" }) : p({ id: "Kurang yakin", en: "Unsure", ko: "불확실" })}
           </li>
         ))}
       </ul>
@@ -98,13 +106,14 @@ function KotakDeteksi({
   sedangDipilih: boolean;
   saatDipilih: () => void;
 }) {
+  const { bahasa } = useBahasa();
   const [x1, y1, x2, y2] = deteksi.bbox_xyxy;
   const warna = WARNA_KOTAK_PER_KEYAKINAN[deteksi.tingkatKeyakinan];
   return (
     <button
       type="button"
       onClick={saatDipilih}
-      aria-label={`${deteksi.nama_indonesia}, keyakinan ${formatAngkaSebagaiPersen(deteksi.confidence)}`}
+      aria-label={`${namaHamaDariDeteksi(bahasa, deteksi)}, ${formatAngkaSebagaiPersen(deteksi.confidence)}`}
       className={gabungkanNamaKelas("absolute rounded-sm border-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-pestguardHijauTua", sedangDipilih ? "bg-white/25" : "hover:bg-white/15")}
       style={{
         left: `${(x1 / LEBAR_GAMBAR_SIMULASI_PIKSEL) * 100}%`,
@@ -116,7 +125,7 @@ function KotakDeteksi({
       }}
     >
       <span className={gabungkanNamaKelas("absolute -top-5 whitespace-nowrap rounded px-1.5 py-0.5 font-pestguardMono text-[10px] font-semibold text-white", x1 / LEBAR_GAMBAR_SIMULASI_PIKSEL > 0.7 ? "right-0" : "left-0")} style={{ backgroundColor: warna }}>
-        {deteksi.nama_indonesia} {formatAngkaSebagaiPersen(deteksi.confidence)}
+        {namaHamaDariDeteksi(bahasa, deteksi)} {formatAngkaSebagaiPersen(deteksi.confidence)}
       </span>
     </button>
   );
